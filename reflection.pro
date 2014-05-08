@@ -5,8 +5,7 @@ CONFIG -= qt
 QMAKE_CXXFLAGS += -std=c++1y
 SOURCES += main.cpp
 
-OTHER_FILES += \
-    reflection.pro.user
+OTHER_FILES +=
 
 HEADERS += \
     declare.hpp \
@@ -15,5 +14,6 @@ HEADERS += \
     member_variable.hpp \
     reflection.hpp \
     static_function.hpp \
-    static_variable.hpp
+    static_variable.hpp \
+    get_typename.hpp
 

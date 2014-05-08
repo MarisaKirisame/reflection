@@ -1,7 +1,7 @@
 #ifndef REFLECTION_HPP
 #define REFLECTION_HPP
 #include "is_empty_tuple.hpp"
-#define GET_TYPE_STRING( ... ) "BlaBlaBla"
+#include "get_typename.hpp"
 #define EXPAND_TUPLE_ARGUMENT_HELPER( R, DATA, ELEMENT ) , ELEMENT
 #define EAT_ARG( ... )
 #define EXPAND_TUPLE_ARGUMENT( ARGUMENT_TUPLE ) \
@@ -24,11 +24,11 @@ struct Any
 												//Let's make everything work first.
 	void * data;
 	template< typename T >
-	Any( const T & ) : type_name( GET_TYPE_STRING( T ) )
+	Any( const T & ) : type_name( GET_TYPENAME( T ) )
 	{
 	}
 	template< typename T >
-	Any( T && ) : type_name( GET_TYPE_STRING( T ) )
+	Any( T && ) : type_name( GET_TYPENAME( T ) )
 	{
 
 	}
