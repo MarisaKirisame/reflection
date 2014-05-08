@@ -20,3 +20,4 @@
 *.out
 *.app
 main.cpp
+*.pro.user

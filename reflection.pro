@@ -6,7 +6,7 @@ QMAKE_CXXFLAGS += -std=c++1y
 SOURCES += main.cpp
 
 OTHER_FILES += \
-    Reflection.pro.user
+    reflection.pro.user
 
 HEADERS += \
     declare.hpp \
