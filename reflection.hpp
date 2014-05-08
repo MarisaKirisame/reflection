@@ -1,5 +1,6 @@
 #ifndef REFLECTION_HPP
 #define REFLECTION_HPP
+#include "is_empty_tuple.hpp"
 #define GET_TYPE_STRING( ... ) "BlaBlaBla"
 #define EXPAND_TUPLE_ARGUMENT_HELPER( R, DATA, ELEMENT ) , ELEMENT
 #define EAT_ARG( ... )

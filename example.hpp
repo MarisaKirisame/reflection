@@ -17,7 +17,7 @@ static_assert( ! HAS_MEMBER_FUNCTION( test, func, ( void * ) ), "" );
 static_assert( std::is_same< MEMBER_FUNCTION_RETURN_TYPE( test, func, ( double ) ), double >::value, "" );
 static_assert( ! HAS_STATIC_FUNCTION( test, func, ( void ) ), "" );
 static_assert( HAS_STATIC_FUNCTION( test, function, ( ) ), "" );
-static_assert( ! HAS_STATIC_FUNCTION( test, func, ( void ) ), "" );
+static_assert( ! HAS_STATIC_FUNCTION( test, func, ( ) ), "" );
 static_assert( std::is_same< STATIC_FUNCTION_RETURN_TYPE( test, function, ( void ) ), int >::value, "" );
 static_assert( ! HAS_MEMBER_FUNCTION( test, foo, ( void ) ), "" );
 static_assert( ! HAS_STATIC_FUNCTION( test, foo, ( ) ), "" );
