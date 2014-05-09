@@ -1,6 +1,5 @@
 #ifndef STATIC_VARIABLE_HPP
 #define STATIC_VARIABLE_HPP
-#include "../misc/misc.hpp"
 #include "reflection.hpp"
 #define DECLARE_POSSIBLE_STATIC_VARIABLE( NAME ) \
 template< typename T, typename SELF > \
@@ -46,8 +45,8 @@ constexpr static bool has_static_variable( \
 		>::type, \
 		decltype( SELF::NAME ) \
 	>::type get_static_variable_return_type( );
-#define HAS_STATIC_VARIABLE( TYPE, NAME ) has_static_variable< TYPE, BOOST_PP_CAT( NAME, _tag ) >::value
-#define STATIC_VARIABLE_TYPE( TYPE, NAME ) static_variable_type< TYPE, BOOST_PP_CAT( NAME, _tag ) >::type
+#define HAS_STATIC_VARIABLE( TYPE, NAME ) ( has_static_variable< TYPE, BOOST_PP_CAT( NAME, _tag ) >::value )
+#define STATIC_VARIABLE_TYPE( TYPE, NAME ) typename static_variable_type< TYPE, BOOST_PP_CAT( NAME, _tag ) >::type
 #define STATIC_VARIABLE( TYPE, NAME ) static_variable< TYPE, BOOST_PP_CAT( NAME, _tag ) >( )( )
 template< typename TYPE, typename NAME >
 struct static_variable

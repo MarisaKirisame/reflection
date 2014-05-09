@@ -1,7 +1,11 @@
 #ifndef MEMBER_FUNCTION_HPP
 #define MEMBER_FUNCTION_HPP
-#include "../misc/misc.hpp"
 #include "reflection.hpp"
+#include <boost/preprocessor/tuple/enum.hpp>
+#include <boost/preprocessor/seq/for_each.hpp>
+#include <type_traits>
+#include <boost/preprocessor/cat.hpp>
+#include <boost/preprocessor/tuple/to_seq.hpp>
 #define DECLARE_POSSIBLE_MEMBER_FUNCTION( NAME ) \
 	template< typename T, typename SELF, typename ... R > \
 	constexpr static bool has_member_function( \
@@ -15,7 +19,7 @@
 			std::is_member_function_pointer< decltype( & SELF::NAME ) >::value, \
 			typename std::add_pointer \
 			< \
-				decltype( misc::construct< SELF * >( )->NAME( misc::construct< R >( ) ... ) ) \
+				decltype( std::declval< SELF * >( )->NAME( std::declval< R >( ) ... ) ) \
 			>::type \
 		>::type ) \
 	{ return true; } \
@@ -27,7 +31,7 @@
 			T, \
 			BOOST_PP_CAT( NAME, _tag ) \
 		>::value, \
-		decltype( misc::construct< SELF * >( )->NAME( misc::construct< R >( ) ... ) ) \
+		decltype( std::declval< SELF * >( )->NAME( std::declval< R >( ) ... ) ) \
 	>::type \
 	call_member_function( const R & ...  r ) { return NAME( r ... ); } \
 	template< typename T, typename SELF, typename ... R > \
@@ -38,18 +42,18 @@
 			T, \
 			BOOST_PP_CAT( NAME, _tag ) \
 		>::value, \
-		decltype( misc::construct< SELF * >( )->NAME( misc::construct< R >( ) ... ) ) \
+		decltype( std::declval< SELF * >( )->NAME( std::declval< R >( ) ... ) ) \
 	>::type \
 	call_member_function( const SELF & t, const R & ...  r ) { return t->NAME( r ... ); }
 #define HAS_MEMBER_FUNCTION( TYPE, NAME, ARGUMENT_TUPLE ) \
-	has_member_function \
+	( has_member_function \
 	< \
 		TYPE, \
 		BOOST_PP_CAT( NAME, _tag ) \
 		EXPAND_TUPLE_ARGUMENT( ARGUMENT_TUPLE ) \
-	>::value
+	>::value )
 #define MEMBER_FUNCTION_RETURN_TYPE( TYPE, NAME, ARGUMENT_TUPLE ) \
-	member_function_return_type \
+	typename member_function_return_type \
 	< \
 		TYPE, \
 		BOOST_PP_CAT( NAME, _tag ) \
@@ -58,7 +62,7 @@
 #define CALL_MEMBER_FUNCTION( SELF, NAME, ARGUMENT_TUPLE ) \
 	call_member_function \
 	< \
-		decltype( SELF ), \
+		typename std::remove_reference< decltype( SELF ) >::type, \
 		BOOST_PP_CAT( NAME, _tag ) \
 		EXPAND_TUPLE_ARGUMENT( \
 			BOOST_PP_SEQ_TO_TUPLE( \
@@ -76,22 +80,26 @@ template< typename TYPE, typename NAME, typename ... ARG >
 struct member_function_return_type
 {
 	typedef decltype(
-			misc::construct< TYPE * >( )->template call_member_function< NAME, TYPE >(
-				misc::construct< ARG >( ) ... ) ) type;
+			std::declval< TYPE * >( )->template call_member_function< NAME, TYPE >(
+				std::declval< ARG >( ) ... ) ) type;
 };
 template< typename TYPE, typename NAME >
 struct member_function_return_type< TYPE, NAME, void >
 {
 	typedef decltype(
-			misc::construct< TYPE * >( )->template call_member_function< NAME, TYPE >( ) ) type;
+			std::declval< TYPE * >( )->template call_member_function< NAME, TYPE >( ) ) type;
 };
 template< typename TYPE, typename NAME, typename ... ARG >
 struct call_member_function
 {
 	decltype(
-			TYPE::template call_member_function< NAME, TYPE >( misc::construct < TYPE >( ), misc::construct< ARG >( ) ... ) )
+			TYPE::template call_member_function \
+			< \
+				NAME , \
+				TYPE \
+			>( std::declval< typename std::remove_reference< decltype( std::declval< TYPE >( ) ) >::type >( ), std::declval< ARG >( ) ... ) )
 	operator ( )( const TYPE & t,const ARG & ... r )
-	{ return TYPE::template call_member_function< NAME, TYPE >( t, r ... ); }
+	{ return std::remove_reference< TYPE >::type::template call_member_function< NAME, std::remove_reference< TYPE >::type >( t, r ... ); }
 };
 template< typename TYPE, typename NAME >
 struct call_member_function< TYPE, NAME, void >

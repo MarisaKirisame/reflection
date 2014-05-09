@@ -1,7 +1,11 @@
 #ifndef STATIC_FUNCTION_HPP
 #define STATIC_FUNCTION_HPP
-#include "../misc/misc.hpp"
 #include "reflection.hpp"
+#include <boost/preprocessor/enum.hpp>
+#include <boost/preprocessor/tuple/to_seq.hpp>
+#include <boost/preprocessor/tuple/enum.hpp>
+#include <boost/preprocessor/seq/to_tuple.hpp>
+#include <boost/preprocessor/seq/transform.hpp>
 #define DECLARE_POSSIBLE_STATIC_FUNCTION( NAME ) \
 	template< typename T, typename SELF, typename ... R > \
 	constexpr static bool has_static_function( \
@@ -14,7 +18,7 @@
 			>::value, \
 			typename std::add_pointer \
 			< \
-				decltype( SELF::NAME( misc::construct< R >( ) ... ) ) \
+				decltype( SELF::NAME( std::declval< R >( ) ... ) ) \
 			>::type \
 		>::type ) \
 	{ return true; } \
@@ -26,18 +30,18 @@
 			T, \
 			BOOST_PP_CAT( NAME, _tag ) \
 		>::value, \
-		decltype( SELF::NAME( misc::construct< R >( ) ... ) ) \
+		decltype( SELF::NAME( std::declval< R >( ) ... ) ) \
 	>::type \
 	static call_static_function( const R & ...  r ) { return SELF::NAME( r ... ); }
 #define HAS_STATIC_FUNCTION( TYPE, NAME, ARGUMENT_TUPLE ) \
-	has_static_function \
+	( has_static_function \
 	< \
 		TYPE, \
 		BOOST_PP_CAT( NAME, _tag ) \
 		EXPAND_TUPLE_ARGUMENT( ARGUMENT_TUPLE ) \
-	>::value
+	>::value )
 #define STATIC_FUNCTION_RETURN_TYPE( TYPE, NAME, ARGUMENT_TUPLE ) \
-	static_function_return_type \
+	typename static_function_return_type \
 	< \
 		TYPE, \
 		BOOST_PP_CAT( NAME, _tag ) \
@@ -60,7 +64,7 @@ struct static_function_return_type
 {
 	typedef decltype(
 			TYPE::template call_static_function< NAME, TYPE >(
-				misc::construct< ARG >( ) ... ) ) type;
+				std::declval< ARG >( ) ... ) ) type;
 };
 template< typename TYPE, typename NAME >
 struct static_function_return_type< TYPE, NAME, void >
@@ -75,7 +79,7 @@ struct has_static_function< TYPE, NAME, void > { static constexpr bool value = T
 template< typename TYPE, typename NAME, typename ... ARG >
 struct call_static_function
 {
-	decltype( TYPE::template call_static_function< NAME, TYPE >( misc::construct< ARG >( ) ... ) )
+	decltype( TYPE::template call_static_function< NAME, TYPE >( std::declval< ARG >( ) ... ) )
 	operator ( )( const ARG & ... r )
 	{ return TYPE::template call_static_function< NAME, TYPE >( r ... ); }
 };

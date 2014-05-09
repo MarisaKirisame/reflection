@@ -35,7 +35,7 @@ static_assert(
 static_assert(
 		std::is_same
 		<
-			decltype( CALL_MEMBER_FUNCTION( misc::construct< test >( ), func, ( 1 ) ) ),
+			decltype( CALL_MEMBER_FUNCTION( std::declval< test >( ), func, ( 1 ) ) ),
 			double
 		>::value, "" );
 static_assert( HAS_MEMBER_VARIABLE( test, data ), "" );

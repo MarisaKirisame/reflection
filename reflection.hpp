@@ -2,6 +2,7 @@
 #define REFLECTION_HPP
 #include "is_empty_tuple.hpp"
 #include "get_typename.hpp"
+#include <type_traits>
 #define EXPAND_TUPLE_ARGUMENT_HELPER( R, DATA, ELEMENT ) , ELEMENT
 #define EAT_ARG( ... )
 #define EXPAND_TUPLE_ARGUMENT( ARGUMENT_TUPLE ) \
