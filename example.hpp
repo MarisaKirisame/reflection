@@ -2,6 +2,7 @@
 #define EXAMPLE_HPP
 #include "declare.hpp"
 #include "any.hpp"
+#include "../misc/misc.hpp"
 #define EXAMPLE_NAME_SEQ (data)(cache)(func)(function)(foo)(bar)(test)
 DECLARE_NAMES( EXAMPLE_NAME_SEQ )
 struct test
@@ -48,6 +49,7 @@ void example( )
 {
 	test t;
 	any_test tr( t );
-	std::cout << tr.test_typename;
+	auto ii = misc::make_expansion( [](int i){ std::cout << i; }, [](...){std::cout << 1;} );
+	tr.get_member_variable< data_tag >( ii );
 }
 #endif //EXAMPLE_HPP

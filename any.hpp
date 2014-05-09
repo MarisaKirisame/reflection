@@ -8,7 +8,7 @@
 #define GET_MEMBER_VARIABLE_HELPER( R, DATA, ELEMENT ) \
 	if ( BOOST_PP_CAT( DATA, _typename ) == GET_TYPENAME( ELEMENT ) ) \
 	{ \
-		k( MEMBER_VARIABLE( * static_cast< ELEMENT * >( BOOST_PP_CAT( DATA, _data ) ), DATA ) ); \
+		k( member_variable< ELEMENT, TAG >( )( * static_cast< ELEMENT * >( BOOST_PP_CAT( DATA, _data ) ) ) ); \
 	}
 #define DECLARE_ANY( NAME, NAME_SEQ ) \
 struct BOOST_PP_CAT( any, BOOST_PP_CAT( _, NAME ) ) \
@@ -24,7 +24,7 @@ struct BOOST_PP_CAT( any, BOOST_PP_CAT( _, NAME ) ) \
 		BOOST_PP_CAT( NAME, _typename )( GET_TYPENAME( T ) ), \
 		BOOST_PP_CAT( NAME, _data )( new T( std::move( t ) ) ) { } \
 	template< typename TAG, typename CPS > \
-	void get_member_variable( const CPS & k ) \
+	void get_member_variable( CPS & k ) \
 	{ \
 		BOOST_PP_SEQ_FOR_EACH( GET_MEMBER_VARIABLE_HELPER, NAME, NAME_SEQ )	\
 	} \

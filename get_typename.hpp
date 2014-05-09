@@ -4,15 +4,18 @@
 #include <boost/preprocessor/stringize.hpp>
 #include <string>
 #include <type_traits>
-#define DECLARE_POSSIBLE_GET_TYPENAME( ELEMENT ) \
-	template < typename SELF > \
-	static constexpr \
-	typename std::enable_if \
-	< \
-		std::is_same< BOOST_PP_CAT( ELEMENT, _tag ), typename SELF::tag >::value, \
-		const char * \
-	>::type get_typename( ) { return BOOST_PP_STRINGIZE( ELEMENT ); }
-template< typename T >
-struct get_typename { constexpr const char * operator( )( ){ return T::template get_typename< T >( ); } };
-#define GET_TYPENAME( T ) get_typename< typename std::remove_reference< T >::type >( )( )
+#include <has_class.hpp>
+template< typename TT >
+struct get_typename
+{
+	constexpr const char * operator ( )( ... ) { return get_typename_inner::function< TT >( nullptr ); }
+	struct get_typename_inner
+	{
+		template< typename T >
+		static constexpr typename std::enable_if< HAS_CLASS( T ), const char * >::type function( T * ){ return T::get_typename( ); }
+		template< typename ... >
+		static constexpr const char *  function( ... ) { return "no exist"; }
+	};
+};
+#define GET_TYPENAME( T ) get_typename< T >( )( nullptr )
 #endif //GET_TYPENAME_HPP
