@@ -7,7 +7,7 @@
 #include "member_variable.hpp"
 #include "static_variable.hpp"
 #include "get_typename.hpp"
-#define DECLARE_NAME( NAME ) struct BOOST_PP_CAT( NAME, _tag ){ }
+#define DECLARE_NAME( NAME ) struct BOOST_PP_CAT( NAME, _tag ){ }; struct NAME;
 #define DECLARE_NAMES_HELPER( R, DATA, ELEMENT ) DECLARE_NAME( ELEMENT );
 #define DECLARE_NAMES( NAME_SEQ ) BOOST_PP_SEQ_FOR_EACH( DECLARE_NAMES_HELPER, _, NAME_SEQ )
 #define DECLARE_TYPE( TYPE, NAME_SEQ ) \

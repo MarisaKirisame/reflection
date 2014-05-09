@@ -15,5 +15,7 @@ HEADERS += \
     reflection.hpp \
     static_function.hpp \
     static_variable.hpp \
-    get_typename.hpp
+    get_typename.hpp \
+    any.hpp \
+    has_class.hpp
 

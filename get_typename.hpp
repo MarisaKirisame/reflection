@@ -14,5 +14,5 @@
 	>::type get_typename( ) { return BOOST_PP_STRINGIZE( ELEMENT ); }
 template< typename T >
 struct get_typename { constexpr const char * operator( )( ){ return T::template get_typename< T >( ); } };
-#define GET_TYPENAME( T ) get_typename< T >( )( )
+#define GET_TYPENAME( T ) get_typename< typename std::remove_reference< T >::type >( )( )
 #endif //GET_TYPENAME_HPP

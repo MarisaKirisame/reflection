@@ -17,21 +17,5 @@
 #define DECLTYPE_HELPER( D, DATA, ELEMENT ) decltype( ELEMENT )
 template< typename T, typename RET = void >
 struct enable_if_valid { typedef RET type; };
-struct Ignore { Ignore( ... ) { } };
-struct Any
-{
-	std::string type_name;//Yes, we are being extremly space-inefficent here,
-												//but premature optimization is the root of evil.
-												//Let's make everything work first.
-	void * data;
-	template< typename T >
-	Any( const T & ) : type_name( GET_TYPENAME( T ) )
-	{
-	}
-	template< typename T >
-	Any( T && ) : type_name( GET_TYPENAME( T ) )
-	{
-
-	}
-};
+struct ignore { ignore( ... ) { } };
 #endif //REFLECTION_HPP

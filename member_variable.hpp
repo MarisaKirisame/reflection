@@ -1,6 +1,7 @@
 #ifndef MEMBER_VARIABLE_HPP
 #define MEMBER_VARIABLE_HPP
 #include "reflection.hpp"
+#include "has_class.hpp"
 #define DECLARE_POSSIBLE_MEMBER_VARIABLE( NAME ) \
 template< typename T, typename SELF > \
 constexpr static bool has_member_variable( \
@@ -68,15 +69,31 @@ constexpr static bool has_member_variable( \
 	BOOST_PP_SEQ_FOR_EACH( INVOKE_ALL_MEMBER_VARIABLE_HELPER, K, NAME_SEQ )
 #define HAS_MEMBER_VARIABLE( TYPE, NAME ) ( has_member_variable< TYPE, BOOST_PP_CAT( NAME, _tag ) >::value )
 #define MEMBER_VARIABLE_TYPE( TYPE, NAME ) typename member_variable_type< TYPE, BOOST_PP_CAT( NAME, _tag ) >::type
-#define MEMBER_VARIABLE( SELF, NAME ) ( member_variable< decltype( SELF ), BOOST_PP_CAT( NAME, _tag ) >( )( SELF ) )
+#define MEMBER_VARIABLE( SELF, NAME ) ( member_variable< std::remove_reference< decltype( SELF ) >::type, BOOST_PP_CAT( NAME, _tag ) >( )( SELF ) )
 template< typename TYPE, typename NAME >
 struct has_member_variable { static constexpr bool value = TYPE::template has_member_variable< NAME, TYPE >( nullptr ); };
 template< typename TYPE, typename NAME >
 struct member_variable_type { typedef decltype( std::declval< TYPE * >( )->template get_member_variable_return_type< NAME, TYPE >( ) ) type; };
-template< typename TYPE, typename NAME >
+struct no_existence{ };
+template< typename TTYPE, typename NNAME >
 struct member_variable
 {
-	decltype( std::declval< TYPE * >( )->template get_member_variable< NAME, TYPE >( ) )
-	operator ( )( TYPE & t ) { return t.template get_member_variable< NAME, TYPE >( ); }
+	struct member_variable_inner
+	{
+		template< typename TYPE, typename NAME >
+		static decltype( std::declval< TYPE * >( )->template get_member_variable< NAME, TYPE >( ) )
+		function( \
+				typename std::enable_if \
+				< \
+					HAS_CLASS( TYPE ) && \
+					has_member_variable< TYPE, NAME >::value, \
+					TYPE \
+				>::type * t ) \
+		{ return t->template get_member_variable< NAME, TYPE >( ); }
+		template< typename TYPE, typename NAME >
+		static no_existence function( ... ) { return no_existence( ); }
+	};
+	decltype( member_variable_inner::function< TTYPE, NNAME >( std::declval< TTYPE * >( ) ) ) operator ( )( TTYPE & t )
+	{ return member_variable_inner::function< TTYPE, NNAME >( & t ); }
 };
 #endif //MEMBER_VARIABLE_HPP
