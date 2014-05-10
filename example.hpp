@@ -1,5 +1,6 @@
 #ifndef EXAMPLE_HPP
 #define EXAMPLE_HPP
+#include <memory>
 #include "declare.hpp"
 #include "any.hpp"
 #include "../misc/misc.hpp"
@@ -15,35 +16,35 @@ struct test
 	static decltype( & function ) bar( long, long time ) { if ( time == 0 ) { } return & function; }
 };
 DECLARE_ANY( test, EXAMPLE_NAME_SEQ )
-static_assert( HAS_MEMBER_FUNCTION( test, func, ( long ) ), "" );
-static_assert( ! HAS_MEMBER_FUNCTION( test, func, ( void * ) ), "" );
-static_assert( std::is_same< MEMBER_FUNCTION_RETURN_TYPE( test, func, ( double ) ), double >::value, "" );
-static_assert( ! HAS_STATIC_FUNCTION( test, func, ( void ) ), "" );
-static_assert( HAS_STATIC_FUNCTION( test, function, ( ) ), "" );
-static_assert( ! HAS_STATIC_FUNCTION( test, func, ( ) ), "" );
-static_assert( std::is_same< STATIC_FUNCTION_RETURN_TYPE( test, function, ( void ) ), int >::value, "" );
-static_assert( ! HAS_MEMBER_FUNCTION( test, foo, ( void ) ), "" );
-static_assert( ! HAS_STATIC_FUNCTION( test, foo, ( ) ), "" );
-static_assert( HAS_STATIC_VARIABLE( test, cache ), "" );
-static_assert( ! HAS_STATIC_VARIABLE( test, data ), "" );
-static_assert( HAS_STATIC_VARIABLE( test, cache ), "" );
-static_assert( std::is_same< STATIC_VARIABLE_TYPE( test, cache ), int >::value, "" );
-static_assert( HAS_STATIC_FUNCTION( test, bar, ( int, int ) ), "" );
+static_assert( has_member_function< test, func_tag, long >::value, "" );
+static_assert( ! has_member_function< test, func_tag, void * >::value , "" );
+static_assert( std::is_same< typename member_function_return_type< test, func_tag, double >::type, double >::value, "" );
+static_assert( ! has_static_function< test, func_tag, void  >::value, "" );
+static_assert( has_static_function< test, function_tag >::value, "" );
+static_assert( ! has_static_function< test, func_tag >::value, "" );
+static_assert( std::is_same< static_function_return_type< test, function_tag, void >::type, int >::value, "" );
+static_assert( ! has_member_function< test, foo_tag, void >::value, "" );
+static_assert( ! has_static_function< test, foo_tag >::value, "" );
+static_assert( has_static_variable< test, cache_tag >::value, "" );
+static_assert( ! has_static_variable< test, data_tag >::value, "" );
+static_assert( has_static_variable< test, cache_tag >::value, "" );
+static_assert( std::is_same< static_variable_type< test, cache_tag >::type, int >::value, "" );
+static_assert( has_static_function< test, bar_tag, int, int >::value, "" );
 static_assert(
 		std::is_same
 		<
-			decltype( CALL_STATIC_FUNCTION( test, bar, ( 0, 1 ) )( ) ),
+			decltype( call_static_function< test, bar_tag, int, int >( )( 0, 1 )( ) ),
 			int
 		>::value, "" );
 static_assert(
 		std::is_same
 		<
-			decltype( CALL_MEMBER_FUNCTION( std::declval< test >( ), func, ( 1 ) ) ),
+			decltype( call_member_function< test, func_tag, long >( )( std::declval< test >( ), ( 1 ) ) ),
 			double
 		>::value, "" );
-static_assert( HAS_MEMBER_VARIABLE( test, data ), "" );
-static_assert( ! HAS_MEMBER_VARIABLE( test, cache ), "" );
-static_assert( std::is_same< MEMBER_VARIABLE_TYPE( test, data ), int >::value, "" );
+static_assert( has_member_variable< test, data_tag >::value, "" );
+static_assert( ! has_member_variable< test, cache_tag >::value, "" );
+static_assert( std::is_same< member_variable_type< test, data_tag >::type, int >::value, "" );
 #include <iostream>
 void example( )
 {

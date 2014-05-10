@@ -45,32 +45,6 @@
 		decltype( std::declval< SELF * >( )->NAME( std::declval< R >( ) ... ) ) \
 	>::type \
 	call_member_function( const SELF & t, const R & ...  r ) { return t->NAME( r ... ); }
-#define HAS_MEMBER_FUNCTION( TYPE, NAME, ARGUMENT_TUPLE ) \
-	( has_member_function \
-	< \
-		TYPE, \
-		BOOST_PP_CAT( NAME, _tag ) \
-		EXPAND_TUPLE_ARGUMENT( ARGUMENT_TUPLE ) \
-	>::value )
-#define MEMBER_FUNCTION_RETURN_TYPE( TYPE, NAME, ARGUMENT_TUPLE ) \
-	typename member_function_return_type \
-	< \
-		TYPE, \
-		BOOST_PP_CAT( NAME, _tag ) \
-		EXPAND_TUPLE_ARGUMENT( ARGUMENT_TUPLE ) \
-	>::type
-#define CALL_MEMBER_FUNCTION( SELF, NAME, ARGUMENT_TUPLE ) \
-	call_member_function \
-	< \
-		typename std::remove_reference< decltype( SELF ) >::type, \
-		BOOST_PP_CAT( NAME, _tag ) \
-		EXPAND_TUPLE_ARGUMENT( \
-			BOOST_PP_SEQ_TO_TUPLE( \
-				BOOST_PP_SEQ_TRANSFORM( \
-					DECLTYPE_HELPER, \
-					_, \
-					BOOST_PP_TUPLE_TO_SEQ( ARGUMENT_TUPLE ) ) ) ) \
-	>( )( SELF, BOOST_PP_TUPLE_ENUM( ARGUMENT_TUPLE ) )
 template< typename TYPE, typename NAME, typename ... ARG >
 struct has_member_function { static constexpr bool value = TYPE::template has_member_function< NAME, TYPE, ARG ... >( nullptr ); };
 template< typename TYPE, typename NAME >

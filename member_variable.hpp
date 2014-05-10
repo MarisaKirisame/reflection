@@ -67,10 +67,6 @@ constexpr static bool has_member_variable( \
 	>( DATA );
 #define INVOKE_ALL_MEMBER_VARIABLE( K, NAME_SEQ ) \
 	BOOST_PP_SEQ_FOR_EACH( INVOKE_ALL_MEMBER_VARIABLE_HELPER, K, NAME_SEQ )
-#define HAS_MEMBER_VARIABLE( TYPE, NAME ) ( has_member_variable< TYPE, BOOST_PP_CAT( NAME, _tag ) >::value )
-#define MEMBER_VARIABLE_TYPE( TYPE, NAME ) typename member_variable_type< TYPE, BOOST_PP_CAT( NAME, _tag ) >::type
-#define MEMBER_VARIABLE( SELF, NAME ) \
-	( member_variable< typename std::remove_cv< typename std::remove_reference< decltype( SELF ) >::type >::type, BOOST_PP_CAT( NAME, _tag ) >( )( SELF ) )
 template< typename TYPE, typename NAME >
 struct has_member_variable { static constexpr bool value = TYPE::template has_member_variable< NAME, TYPE >( nullptr ); };
 template< typename TYPE, typename NAME >
@@ -86,7 +82,7 @@ struct member_variable
 		function( \
 				typename std::enable_if \
 				< \
-					HAS_CLASS( TYPE ) && \
+					has_class< TYPE >::value && \
 					has_member_variable< TYPE, NAME >::value, \
 					TYPE \
 				>::type * t ) \
