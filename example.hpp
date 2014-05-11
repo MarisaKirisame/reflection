@@ -54,5 +54,7 @@ void example( )
 	auto ii = misc::make_expansion( [](int i){ std::cout << i; }, [](...){std::cout << 1;} );
 	tr.get_member_variable< data_tag >( ii );
 	tr.get_static_variable< cache_tag >( ii );
+	assert( ! tr.has_member_variable< cache_tag >( ) );
+	assert( tr.has_static_variable< cache_tag >( ) );
 }
 #endif //EXAMPLE_HPP

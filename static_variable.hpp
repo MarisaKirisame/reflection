@@ -58,8 +58,19 @@ struct static_variable
 	};
 	decltype( inner::function< TTYPE, NNAME >( nullptr ) ) operator( )( ) { return inner::function< TTYPE, NNAME >( nullptr ); }
 };
-template< typename TYPE, typename NAME >
-struct has_static_variable { static constexpr bool value = TYPE::template has_static_variable< NAME, TYPE >( nullptr ); };
+template< typename TTYPE, typename NNAME >
+struct has_static_variable
+{
+	struct inner
+	{
+		template< typename TYPE, typename NAME >
+		constexpr static bool function( typename std::enable_if< has_class< TYPE >::value >::type * )
+		{ return TYPE::template has_static_variable< NAME, TYPE >( nullptr ); }
+		template< typename TYPE, typename NAME >
+		constexpr static bool function( ... ) { return false; }
+	};
+	static constexpr bool value = inner::function< TTYPE, NNAME >( nullptr );
+};
 template< typename TYPE, typename NAME >
 struct static_variable_type { typedef decltype( TYPE::template get_static_variable_return_type< NAME, TYPE >( ) ) type; };
 #endif //STATIC_VARIABLE_HPP

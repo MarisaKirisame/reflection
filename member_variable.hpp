@@ -67,8 +67,19 @@ constexpr static bool has_member_variable( \
 	>( DATA );
 #define INVOKE_ALL_MEMBER_VARIABLE( K, NAME_SEQ ) \
 	BOOST_PP_SEQ_FOR_EACH( INVOKE_ALL_MEMBER_VARIABLE_HELPER, K, NAME_SEQ )
-template< typename TYPE, typename NAME >
-struct has_member_variable { static constexpr bool value = TYPE::template has_member_variable< NAME, TYPE >( nullptr ); };
+template< typename TTYPE, typename NNAME >
+struct has_member_variable
+{
+	struct inner
+	{
+		template< typename TYPE, typename NAME >
+		constexpr static bool function( typename std::enable_if< has_class< TYPE >::value >::type * )
+		{ return TYPE::template has_member_variable< NAME, TYPE >( nullptr ); }
+		template< typename TYPE, typename NAME >
+		constexpr static bool function( ... ) { return false; }
+	};
+	static constexpr bool value = inner::function< TTYPE, NNAME >( nullptr );
+};
 template< typename TYPE, typename NAME >
 struct member_variable_type { typedef decltype( std::declval< TYPE * >( )->template get_member_variable_return_type< NAME, TYPE >( ) ) type; };
 template< typename TTYPE, typename NNAME >
