@@ -5,10 +5,17 @@
 #include <memory>
 #include <get_typename.hpp>
 #include <member_variable.hpp>
+#include <static_variable.hpp>
 #define GET_MEMBER_VARIABLE_HELPER( R, DATA, ELEMENT ) \
 	if ( any_typename == get_typename< ELEMENT >( )( ) ) \
 	{ \
 		k( member_variable< ELEMENT, TAG >( )( * static_cast< ELEMENT * >( any_data->data ) ) ); \
+		return;\
+	}
+#define GET_STATIC_VARIABLE_HELPER( R, DATA, ELEMENT ) \
+	if ( any_typename == get_typename< ELEMENT >( )( ) ) \
+	{ \
+		k( static_variable< ELEMENT, TAG >( )( ) ); \
 		return;\
 	}
 #define DECLARE_ANY( NAME, NAME_SEQ ) \
@@ -57,6 +64,11 @@ struct BOOST_PP_CAT( any_, NAME ) \
 	void get_member_variable( CPS & k ) \
 	{ \
 		BOOST_PP_SEQ_FOR_EACH( GET_MEMBER_VARIABLE_HELPER, NAME, NAME_SEQ )	\
+	} \
+	template< typename TAG, typename CPS > \
+	void get_static_variable( CPS & k ) \
+	{ \
+		BOOST_PP_SEQ_FOR_EACH( GET_STATIC_VARIABLE_HELPER, NAME, NAME_SEQ )	\
 	} \
 };
 
