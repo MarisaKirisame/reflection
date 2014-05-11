@@ -8,13 +8,13 @@
 template< typename TT >
 struct get_typename
 {
-	constexpr const char * operator ( )( ... ) { return get_typename_inner::function< TT >( nullptr ); }
+	constexpr const char * operator ( )( ... ) { return get_typename_inner::function< typename std::remove_reference< typename std::remove_cv< TT >::type >::type >( nullptr ); }
 	struct get_typename_inner
 	{
 		template< typename T >
 		static constexpr typename std::enable_if< has_class< T >::value, const char * >::type function( T * ){ return T::get_typename( ); }
 		template< typename ... >
-		static constexpr const char *  function( ... ) { return "no exist"; }
+		static constexpr const char *  function( ... ) { return ""; }
 	};
 };
 #endif //GET_TYPENAME_HPP

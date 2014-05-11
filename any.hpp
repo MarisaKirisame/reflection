@@ -6,32 +6,53 @@
 #include <get_typename.hpp>
 #include <member_variable.hpp>
 #define GET_MEMBER_VARIABLE_HELPER( R, DATA, ELEMENT ) \
-	if ( BOOST_PP_CAT( DATA, _typename ) == get_typename< ELEMENT >( )( ) ) \
+	if ( any_typename == get_typename< ELEMENT >( )( ) ) \
 	{ \
-		k( member_variable< ELEMENT, TAG >( )( * static_cast< ELEMENT * >( BOOST_PP_CAT( DATA, _data ) ) ) ); \
-	}
-#define DESTRUCTOR_HELPER( R, DATA, ELEMENT ) \
-	if ( BOOST_PP_CAT( DATA, _typename ) == get_typename< ELEMENT >( )( ) ) \
-	{ \
-		k( member_variable< ELEMENT, TAG >( )( * static_cast< ELEMENT * >( BOOST_PP_CAT( DATA, _data ) ) ) ); \
+		k( member_variable< ELEMENT, TAG >( )( * static_cast< ELEMENT * >( any_data->data ) ) ); \
+		return;\
 	}
 #define DECLARE_ANY( NAME, NAME_SEQ ) \
 struct BOOST_PP_CAT( any_, NAME ) \
 { \
-	std::string BOOST_PP_CAT( NAME, _typename ); \
-	void * BOOST_PP_CAT( NAME, _data ); \
+	std::string any_typename; \
 	template< typename T > \
-	BOOST_PP_CAT( any_, NAME )( T t ) : \
-		BOOST_PP_CAT( NAME, _typename )( get_typename< T >( )( ) ), \
-		BOOST_PP_CAT( NAME, _data )( new T( std::forward< T >( t ) ) ) \
+	BOOST_PP_CAT( any_, NAME )( const T & t ) : \
+		any_typename( get_typename< T >( )( ) ), \
+		any_data( new any_internal_implement< typename std::remove_reference< T >::type >( t ) ) \
 	{ \
-		if ( BOOST_PP_CAT( NAME, _typename ).empty( ) )\
+		if ( any_typename.empty( ) )\
 		{ \
-			delete static_cast< typename std::remove_reference< T >::type * >( BOOST_PP_CAT( NAME, _data ) ); \
+			delete static_cast< typename std::remove_reference< T >::type * >( any_data->data ); \
 			throw std::runtime_error( "cannot determine type of argument." ); \
 		} \
 	} \
-	~BOOST_PP_CAT( any_, NAME )( ) { }	\
+	template< typename T > \
+	BOOST_PP_CAT( any_, NAME )( T && t ) : \
+		any_typename( get_typename< T >( )( ) ),\
+		any_data( new any_internal_implement< typename std::remove_reference< T >::type >( t ) ) \
+		{ \
+			if ( any_typename.empty( ) )\
+			{ \
+				delete static_cast< typename std::remove_reference< T >::type * >( any_data->data ); \
+				throw std::runtime_error( "cannot determine type of argument." ); \
+			} \
+		} \
+	struct any_internal \
+	{ \
+		void * data;\
+		virtual ~any_internal( ) { } \
+		any_internal( void * d ) : data( d ) { }\
+	}; \
+	template< typename T > \
+	struct any_internal_implement : any_internal \
+	{	\
+		any_internal_implement( T const & t ) : any_internal( new T( t ) ) { }\
+		any_internal_implement( T && t ) : any_internal( new T( std::move< T >( t ) ) ) { } \
+		~any_internal_implement( ) \
+		{ delete static_cast< T * >( data ); }\
+	};\
+	any_internal * any_data; \
+	~BOOST_PP_CAT( any_, NAME )( ) { delete any_data; }	\
 	template< typename TAG, typename CPS > \
 	void get_member_variable( CPS & k ) \
 	{ \
