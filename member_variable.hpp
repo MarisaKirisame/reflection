@@ -101,6 +101,6 @@ struct member_variable
 		static no_existence function( ... ) { return no_existence( ); }
 	};
 	decltype( member_variable_inner::function< TTYPE, NNAME >( std::declval< TTYPE * >( ) ) ) operator ( )( TTYPE & t )
-	{ return member_variable_inner::function< TTYPE, NNAME >( & t ); }
+	{ return member_variable_inner::function< TTYPE, NNAME >( std::addressof( t ) ); }
 };
 #endif //MEMBER_VARIABLE_HPP

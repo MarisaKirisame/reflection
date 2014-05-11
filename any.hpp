@@ -6,6 +6,7 @@
 #include <get_typename.hpp>
 #include <member_variable.hpp>
 #include <static_variable.hpp>
+#include <member_function.hpp>
 #define GET_MEMBER_VARIABLE_HELPER( R, DATA, ELEMENT ) \
 	if ( any_typename == get_typename< ELEMENT >( )( ) ) \
 	{ \
@@ -22,11 +23,16 @@
 	{ \
 		return ::has_static_variable< ELEMENT, TAG >::value; \
 	}
-
 #define GET_STATIC_VARIABLE_HELPER( R, DATA, ELEMENT ) \
 	if ( any_typename == get_typename< ELEMENT >( )( ) ) \
 	{ \
 		k( static_variable< ELEMENT, TAG >( )( ) ); \
+		return;\
+	}
+#define CALL_MEMBER_FUNCTION_HELPER( R, DATA, ELEMENT ) \
+	if ( any_typename == get_typename< ELEMENT >( )( ) )  \
+	{ \
+		call_member_function_delegate< ELEMENT, TAG, K, ARG ... >( )( static_cast< ELEMENT * >( any_data->data ), k, arg ... ); \
 		return;\
 	}
 struct unable_to_determine_type : std::runtime_error
@@ -36,7 +42,8 @@ struct unable_to_determine_type : std::runtime_error
 
 #define DECLARE_ANY( NAME, NAME_SEQ ) \
 struct BOOST_PP_CAT( any_, NAME ) \
-{ \
+{	\
+	struct loop_tag{ };\
 	std::string any_typename; \
 	template< typename T > \
 	BOOST_PP_CAT( any_, NAME )( const T & t ) : \
@@ -100,6 +107,55 @@ struct BOOST_PP_CAT( any_, NAME ) \
 		BOOST_PP_SEQ_FOR_EACH( GET_STATIC_VARIABLE_HELPER, NAME, NAME_SEQ )	\
 		throw unable_to_determine_type( ); \
 	} \
+	template< typename TAG, typename T, typename ... ARG > \
+	void call_member_function( const T & t, const ARG & ... r ) { call_member_function_loop< TAG >( t, r ..., loop_tag( ) ); }\
+	template< typename TAG, typename T, typename ... ARG > \
+	void call_member_function_loop( const T & t, const ARG & ... r ) \
+	{ call_member_function_loop< TAG >( r ..., t ); }\
+	template< typename TAG, typename T, typename ... ARG > \
+	void call_member_function_loop( const T & t, loop_tag, const ARG & ... r ) \
+	{ call_member_function_inner< TAG >( t, r ... ); }\
+	template< typename TAG, typename K, typename ... ARG > \
+	void call_member_function_inner( const K & k, const ARG & ... arg ) \
+	{\
+		BOOST_PP_SEQ_FOR_EACH( CALL_MEMBER_FUNCTION_HELPER, NAME, NAME_SEQ )	\
+		throw unable_to_determine_type( );\
+	}\
+	template< typename TT, typename TTAG, typename KK, typename ... AARG > \
+	struct call_member_function_delegate \
+	{	\
+		struct inner \
+		{	\
+			template< typename T, typename TAG, typename K, typename ... ARG > \
+			static void function( \
+				typename std::enable_if\
+			< \
+				std::is_same< typename member_function_return_type< T, TAG, ARG ... >::type, void >::value && \
+				has_member_function< T, TAG, ARG ... >::value,\
+				T * \
+			>::type t, \
+			const K & k, const ARG & ... arg ) \
+			{	\
+				::call_member_function< T, TAG, ARG ... >( )( * t, arg ... );\
+				k( ); \
+			} \
+			template< typename T, typename TAG, typename K, typename ... ARG > \
+			static void function( \
+				typename std::enable_if \
+				< \
+					( ! std::is_same< typename member_function_return_type< T, TAG, ARG ... >::type , void >::value ) && \
+					has_member_function< T, TAG, ARG ... >::value, \
+					T * \
+			>::type t, \
+			const K & k, const ARG & ... arg ){	k( ::call_member_function< T, TAG, ARG ... >( )( * t, arg ... ) ); } \
+			template< typename ... R > \
+			static void function( ... ) { throw; } \
+		}; \
+		void operator( )( TT * t, const KK & k, const AARG & ... arg ) \
+		{\
+			inner::function< TT, TTAG, KK, AARG ... >( t, k, arg ... );\
+		}\
+	};\
 };
 
 #endif // ANY_HPP

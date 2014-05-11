@@ -10,7 +10,7 @@ struct test
 {
 	DECLARE_TYPE( test, EXAMPLE_NAME_SEQ );
 	int data = 12450;
-	double func( int ) { return 0; }
+	double func( int ) const { return 10; }
 	static int function( ) { return 1; }
 	static int cache;
 	static decltype( & function ) bar( long, long time ) { if ( time == 0 ) { } return & function; }
@@ -56,5 +56,7 @@ void example( )
 	tr.get_static_variable< cache_tag >( ii );
 	assert( ! tr.has_member_variable< cache_tag >( ) );
 	assert( tr.has_static_variable< cache_tag >( ) );
+	tr.call_member_function< func_tag >( 1, ii );
+	std::cout << "Hello World" << std::endl;
 }
 #endif //EXAMPLE_HPP

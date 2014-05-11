@@ -44,24 +44,54 @@
 		>::value, \
 		decltype( std::declval< SELF * >( )->NAME( std::declval< R >( ) ... ) ) \
 	>::type \
-	call_member_function( const SELF & t, const R & ...  r ) { return t->NAME( r ... ); }
-template< typename TYPE, typename NAME, typename ... ARG >
-struct has_member_function { static constexpr bool value = TYPE::template has_member_function< NAME, TYPE, ARG ... >( nullptr ); };
-template< typename TYPE, typename NAME >
-struct has_member_function< TYPE, NAME, void >
-{ static constexpr bool value = TYPE::template has_member_function< NAME, TYPE >( nullptr ); };
-template< typename TYPE, typename NAME, typename ... ARG >
+	call_member_function( const SELF & t, const R & ...  r ) { return t.NAME( r ... ); }
+template< typename TTYPE, typename NNAME, typename ... AARG >
+struct has_member_function
+{
+	template< typename TTTYPE, typename NNNAME, typename ... AAARG >
+	struct has_member_function_inner
+	{
+		template< typename TYPE, typename NAME, typename ... ARG >
+		static constexpr bool function( typename std::enable_if< has_class< TYPE >::value >::type * )
+		{ return TYPE::template has_member_function< NAME, TYPE, ARG ... >( nullptr ); }
+		template< typename TYPE, typename NAME, typename ... ARG >
+		static constexpr bool function( ... )
+		{ return false; }
+	};
+	template< typename TTTYPE, typename NNNAME >
+	struct has_member_function_inner< TTTYPE, NNNAME, void >
+	{
+		template< typename TYPE, typename NAME, typename ... ARG >
+		static constexpr bool function( typename std::enable_if< has_class< TYPE >::value >::type * )
+		{ return TYPE::template has_member_function< NAME, TYPE >( nullptr ); }
+		template< typename TYPE, typename NAME, typename ... ARG >
+		static constexpr bool function( ... )
+		{ return false; }
+	};
+	constexpr static bool value = has_member_function_inner< TTYPE, NNAME, AARG ... >::template function< TTYPE, NNAME, AARG ... >( nullptr );
+};
+
+template< typename TTYPE, typename NNAME, typename ... AARG >
 struct member_function_return_type
 {
-	typedef decltype(
-			std::declval< TYPE * >( )->template call_member_function< NAME, TYPE >(
-				std::declval< ARG >( ) ... ) ) type;
-};
-template< typename TYPE, typename NAME >
-struct member_function_return_type< TYPE, NAME, void >
-{
-	typedef decltype(
-			std::declval< TYPE * >( )->template call_member_function< NAME, TYPE >( ) ) type;
+	template< typename TTTYPE, typename NNNAME, typename ... AAARG >
+	struct member_function_return_type_inner
+	{
+		template< typename TYPE, typename NAME, typename ... ARG >
+		static decltype(
+					std::declval< TYPE * >( )->template call_member_function< NAME, TYPE >(
+						std::declval< ARG >( ) ... ) ) function( void * );
+		template< typename TYPE, typename NAME, typename ... ARG >
+		static no_existence function( ... );
+	};
+	template< typename TTTYPE, typename NNNAME >
+	struct member_function_return_type_inner< TTTYPE, NNNAME, void >
+	{
+		template< typename TYPE, typename NAME >
+		static decltype(
+				std::declval< TYPE * >( )->template call_member_function< NAME, TYPE >( ) ) function( );
+	};
+	typedef decltype( member_function_return_type_inner< TTYPE, NNAME, AARG ... >::template function< TTYPE, NNAME, AARG ... >( nullptr ) ) type;
 };
 template< typename TYPE, typename NAME, typename ... ARG >
 struct call_member_function
@@ -73,7 +103,7 @@ struct call_member_function
 				TYPE \
 			>( std::declval< typename std::remove_reference< decltype( std::declval< TYPE >( ) ) >::type >( ), std::declval< ARG >( ) ... ) )
 	operator ( )( const TYPE & t,const ARG & ... r )
-	{ return std::remove_reference< TYPE >::type::template call_member_function< NAME, std::remove_reference< TYPE >::type >( t, r ... ); }
+	{ return std::remove_reference< TYPE >::type::template call_member_function< NAME, typename std::remove_reference< TYPE >::type >( t, r ... ); }
 };
 template< typename TYPE, typename NAME >
 struct call_member_function< TYPE, NAME, void >
