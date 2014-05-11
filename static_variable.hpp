@@ -45,11 +45,18 @@ constexpr static bool has_static_variable( \
 		>::type, \
 		decltype( SELF::NAME ) \
 	>::type get_static_variable_return_type( );
-template< typename TYPE, typename NAME >
+template< typename TTYPE, typename NNAME >
 struct static_variable
 {
-	decltype( TYPE::template get_static_variable< NAME, TYPE >( ) )
-	operator ( )( ) { return TYPE::template get_static_variable< NAME, TYPE >( ); }
+	struct inner
+	{
+		template< typename TYPE, typename NAME >
+		static decltype( TYPE::template get_static_variable< NAME, TYPE >( ) )
+		function( void * ) { return TYPE::template get_static_variable< NAME, TYPE >( ); }
+		template< typename TYPE, typename NAME >
+		static no_existence function( ... ) { return no_existence( ); }
+	};
+	decltype( inner::function< TTYPE, NNAME >( nullptr ) ) operator( )( ) { return inner::function< TTYPE, NNAME >( nullptr ); }
 };
 template< typename TYPE, typename NAME >
 struct has_static_variable { static constexpr bool value = TYPE::template has_static_variable< NAME, TYPE >( nullptr ); };

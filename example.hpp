@@ -15,6 +15,7 @@ struct test
 	static int cache;
 	static decltype( & function ) bar( long, long time ) { if ( time == 0 ) { } return & function; }
 };
+int test::cache = 0;
 DECLARE_ANY( test, EXAMPLE_NAME_SEQ )
 static_assert( has_member_function< test, func_tag, long >::value, "" );
 static_assert( ! has_member_function< test, func_tag, void * >::value , "" );
@@ -52,5 +53,6 @@ void example( )
 	any_test tr( t );
 	auto ii = misc::make_expansion( [](int i){ std::cout << i; }, [](...){std::cout << 1;} );
 	tr.get_member_variable< data_tag >( ii );
+	tr.get_static_variable< cache_tag >( ii );
 }
 #endif //EXAMPLE_HPP

@@ -71,7 +71,6 @@ template< typename TYPE, typename NAME >
 struct has_member_variable { static constexpr bool value = TYPE::template has_member_variable< NAME, TYPE >( nullptr ); };
 template< typename TYPE, typename NAME >
 struct member_variable_type { typedef decltype( std::declval< TYPE * >( )->template get_member_variable_return_type< NAME, TYPE >( ) ) type; };
-struct no_existence{ };
 template< typename TTYPE, typename NNAME >
 struct member_variable
 {
@@ -79,13 +78,13 @@ struct member_variable
 	{
 		template< typename TYPE, typename NAME >
 		static decltype( std::declval< TYPE * >( )->template get_member_variable< NAME, TYPE >( ) )
-		function( \
-				typename std::enable_if \
-				< \
+		function(
+				typename std::enable_if
+				<
 					has_class< TYPE >::value && \
-					has_member_variable< TYPE, NAME >::value, \
-					TYPE \
-				>::type * t ) \
+					has_member_variable< TYPE, NAME >::value,
+					TYPE
+				>::type * t )
 		{ return t->template get_member_variable< NAME, TYPE >( ); }
 		template< typename TYPE, typename NAME >
 		static no_existence function( ... ) { return no_existence( ); }
