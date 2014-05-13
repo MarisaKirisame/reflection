@@ -51,12 +51,13 @@ void example( )
 {
 	test t;
 	any_test tr( t );
-	auto ii = misc::make_expansion( [](int i){ std::cout << i; }, [](...){std::cout << 1;} );
+	auto ii = misc::make_expansion( [](int i){ std::cout << i << std::endl; }, [](...){ std::cout << "Hello World" << std::endl; } );
 	tr.get_member_variable< data_tag >( ii );
 	tr.get_static_variable< cache_tag >( ii );
 	assert( ! tr.has_member_variable< cache_tag >( ) );
 	assert( tr.has_static_variable< cache_tag >( ) );
 	tr.call_member_function< func_tag >( 1, ii );
-	std::cout << "Hello World" << std::endl;
+	tr.call_static_function< function_tag >( ii );
+	tr.call_member_function< function_tag >( ii );
 }
 #endif //EXAMPLE_HPP

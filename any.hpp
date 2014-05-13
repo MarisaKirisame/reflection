@@ -35,11 +35,16 @@
 		call_member_function_delegate< ELEMENT, TAG, K, ARG ... >( )( static_cast< ELEMENT * >( any_data->data ), k, arg ... ); \
 		return;\
 	}
+#define CALL_STATIC_FUNCTION_HELPER( R, DATA, ELEMENT ) \
+	if ( any_typename == get_typename< ELEMENT >( )( ) )  \
+	{ \
+		call_static_function_delegate< ELEMENT, TAG, K, ARG ... >( )( k, arg ... ); \
+		return;\
+	}
 struct unable_to_determine_type : std::runtime_error
 {
 	unable_to_determine_type( ) : std::runtime_error( "Unable to determine the type." ) { }
 };
-
 #define DECLARE_ANY( NAME, NAME_SEQ ) \
 struct BOOST_PP_CAT( any_, NAME ) \
 {	\
@@ -148,14 +153,62 @@ struct BOOST_PP_CAT( any_, NAME ) \
 					T * \
 			>::type t, \
 			const K & k, const ARG & ... arg ){	k( ::call_member_function< T, TAG, ARG ... >( )( * t, arg ... ) ); } \
-			template< typename ... R > \
-			static void function( ... ) { throw; } \
+			template< typename T, typename TAG, typename K, typename ... ARG > \
+			static void function( void *, const K & k, ... ) { k( no_existence( ) ); } \
 		}; \
 		void operator( )( TT * t, const KK & k, const AARG & ... arg ) \
 		{\
 			inner::function< TT, TTAG, KK, AARG ... >( t, k, arg ... );\
 		}\
 	};\
+	template< typename TAG, typename T, typename ... ARG > \
+	void call_static_function( const T & t, const ARG & ... r ) { call_static_function_loop< TAG >( t, r ..., loop_tag( ) ); }\
+	template< typename TAG, typename T, typename ... ARG > \
+	void call_static_function_loop( const T & t, const ARG & ... r ) \
+	{ call_static_function_loop< TAG >( r ..., t ); }\
+	template< typename TAG, typename T, typename ... ARG > \
+	void call_static_function_loop( const T & t, loop_tag, const ARG & ... r ) \
+	{ call_static_function_inner< TAG >( t, r ... ); }\
+	template< typename TAG, typename K, typename ... ARG > \
+	void call_static_function_inner( const K & k, const ARG & ... arg ) \
+	{\
+		BOOST_PP_SEQ_FOR_EACH( CALL_STATIC_FUNCTION_HELPER, NAME, NAME_SEQ )	\
+		throw unable_to_determine_type( );\
+	}\
+	template< typename TT, typename TTAG, typename KK, typename ... AARG > \
+	struct call_static_function_delegate \
+	{	\
+		struct inner \
+		{	\
+			template< typename T, typename TAG, typename K, typename ... ARG > \
+			static void function( \
+				typename std::enable_if\
+			< \
+				std::is_same< typename static_function_return_type< T, TAG, ARG ... >::type, void >::value && \
+				has_member_function< T, TAG, ARG ... >::value,\
+				const K &  \
+			>::type k, \
+			const ARG & ... arg ) \
+			{	\
+				::call_static_function< T, TAG, ARG ... >( )( arg ... );\
+				k( ); \
+			} \
+			template< typename T, typename TAG, typename K, typename ... ARG > \
+			static void function( \
+				typename std::enable_if \
+				< \
+					( ! std::is_same< typename static_function_return_type< T, TAG, ARG ... >::type , void >::value ) && \
+					has_static_function< T, TAG, ARG ... >::value, \
+					const K & \
+			>::type k, \
+			const ARG & ... arg ){	k( ::call_static_function< T, TAG, ARG ... >( )( arg ... ) ); } \
+			template< typename T, typename TAG, typename K, typename ... ARG > \
+			static void function( const K & k, ... ) { k( no_existence( ) ); } \
+		}; \
+		void operator( )( const KK & k, const AARG & ... arg ) \
+		{\
+			inner::function< TT, TTAG, KK, AARG ... >( k, arg ... );\
+		}\
+	};\
 };
-
 #endif // ANY_HPP
