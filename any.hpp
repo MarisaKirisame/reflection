@@ -1,5 +1,6 @@
 #ifndef ANY_HPP
 #define ANY_HPP
+#include <boost/mpl/vector.hpp>
 #include <boost/preprocessor/cat.hpp>
 #include <boost/preprocessor/seq/for_each.hpp>
 #include <memory>
@@ -63,6 +64,18 @@ if ( any_typename == get_typename< ELEMENT >( )( ) ) \
 		k( tag< typename member_variable_type< ELEMENT, TAG >::type >( ) ); \
 		return; \
 	}
+#define MEMBER_FUNCTION_RETURN_TYPE_HELPER( R, DATA, ELEMENT ) \
+if ( any_typename == get_typename< ELEMENT >( )( ) ) \
+{ \
+	k( ::tag< typename ::member_function_return_type< ELEMENT, TAG, ARG ... >::type >( ) ); \
+	return;\
+}
+#define STATIC_FUNCTION_RETURN_TYPE_HELPER( R, DATA, ELEMENT ) \
+if ( any_typename == get_typename< ELEMENT >( )( ) ) \
+{ \
+	k( ::tag< typename ::static_function_return_type< ELEMENT, TAG, ARG ... >::type >( ) ); \
+	return;\
+}
 struct unable_to_determine_type : std::runtime_error
 {
 	unable_to_determine_type( ) : std::runtime_error( "Unable to determine the type." ) { }
@@ -107,7 +120,7 @@ struct BOOST_PP_CAT( any_, NAME ) \
 		any_internal_implement( T && t ) : any_internal( new T( std::move< T >( t ) ) ) { } \
 		~any_internal_implement( ) \
 		{ delete static_cast< T * >( data ); }\
-	};\
+	}; \
 	any_internal * any_data; \
 	~BOOST_PP_CAT( any_, NAME )( ) { delete any_data; }	\
 	template< typename TAG, typename CPS > \
@@ -134,8 +147,8 @@ struct BOOST_PP_CAT( any_, NAME ) \
 		BOOST_PP_SEQ_FOR_EACH( GET_STATIC_VARIABLE_HELPER, NAME, NAME_SEQ )	\
 		throw unable_to_determine_type( ); \
 	} \
-	template< typename TAG, typename T, typename ... ARG > \
-	void call_member_function( const T & t, const ARG & ... r ) { call_member_function_loop< TAG >( t, r ..., loop_tag( ) ); }\
+	template< typename TAG, typename ... ARG > \
+	void call_member_function( const ARG & ... r ) { call_member_function_loop< TAG >( r ..., loop_tag( ) ); }\
 	template< typename TAG, typename T, typename ... ARG > \
 	void call_member_function_loop( const T & t, const ARG & ... r ) \
 	{ call_member_function_loop< TAG >( r ..., t ); }\
@@ -144,10 +157,10 @@ struct BOOST_PP_CAT( any_, NAME ) \
 	{ call_member_function_inner< TAG >( t, r ... ); }\
 	template< typename TAG, typename K, typename ... ARG > \
 	void call_member_function_inner( const K & k, const ARG & ... arg ) \
-	{\
+	{ \
 		BOOST_PP_SEQ_FOR_EACH( CALL_MEMBER_FUNCTION_HELPER, NAME, NAME_SEQ )	\
 		throw unable_to_determine_type( );\
-	}\
+	} \
 	template< typename TT, typename TTAG, typename KK, typename ... AARG > \
 	struct call_member_function_delegate \
 	{	\
@@ -179,24 +192,24 @@ struct BOOST_PP_CAT( any_, NAME ) \
 			static void function( void *, const K & k, ... ) { k( no_existence( ) ); } \
 		}; \
 		void operator( )( TT * t, const KK & k, const AARG & ... arg ) \
-		{\
+		{ \
 			inner::function< TT, TTAG, KK, AARG ... >( t, k, arg ... );\
-		}\
-	};\
-	template< typename TAG, typename T, typename ... ARG > \
-	void call_static_function( const T & t, const ARG & ... r ) { call_static_function_loop< TAG >( t, r ..., loop_tag( ) ); }\
+		} \
+	}; \
+	template< typename TAG, typename ... ARG > \
+	void call_static_function( const ARG & ... r ) { call_static_function_loop< TAG >( r ..., loop_tag( ) ); }\
 	template< typename TAG, typename T, typename ... ARG > \
 	void call_static_function_loop( const T & t, const ARG & ... r ) \
-	{ call_static_function_loop< TAG >( r ..., t ); }\
+	{ call_static_function_loop< TAG >( r ..., t ); } \
 	template< typename TAG, typename T, typename ... ARG > \
 	void call_static_function_loop( const T & t, loop_tag, const ARG & ... r ) \
-	{ call_static_function_inner< TAG >( t, r ... ); }\
+	{ call_static_function_inner< TAG >( t, r ... ); } \
 	template< typename TAG, typename K, typename ... ARG > \
 	void call_static_function_inner( const K & k, const ARG & ... arg ) \
-	{\
+	{ \
 		BOOST_PP_SEQ_FOR_EACH( CALL_STATIC_FUNCTION_HELPER, NAME, NAME_SEQ )	\
 		throw unable_to_determine_type( );\
-	}\
+	} \
 	template< typename TT, typename TTAG, typename KK, typename ... AARG > \
 	struct call_static_function_delegate \
 	{	\
@@ -228,10 +241,10 @@ struct BOOST_PP_CAT( any_, NAME ) \
 			static void function( const K & k, ... ) { k( no_existence( ) ); } \
 		}; \
 		void operator( )( const KK & k, const AARG & ... arg ) \
-		{\
+		{ \
 			inner::function< TT, TTAG, KK, AARG ... >( k, arg ... );\
-		}\
-	};\
+		} \
+	}; \
 	template< typename TAG, typename ... ARG > \
 	bool has_static_function( ) \
 	{ \
@@ -256,5 +269,39 @@ struct BOOST_PP_CAT( any_, NAME ) \
 		BOOST_PP_SEQ_FOR_EACH( STATIC_VARIABLE_TYPE_HELPER, NAME, NAME_SEQ )	\
 		throw unable_to_determine_type( ); \
 	} \
+	template< typename TAG, typename ... ARG > \
+	struct member_function_return_type_delegate \
+	{ \
+		BOOST_PP_CAT( any_, NAME ) * that;\
+		template< typename T > \
+		void operator( )( const T & t ) { that->member_function_return_type_inner< TAG, T, ARG ... >( t ); } \
+		member_function_return_type_delegate( BOOST_PP_CAT( any_, NAME ) * that ) : that( that ) { }\
+	};\
+	template< typename TAG, typename K, typename ... ARG > \
+	void static_function_return_type_inner( const K & k ) \
+	{ \
+		BOOST_PP_SEQ_FOR_EACH( STATIC_FUNCTION_RETURN_TYPE_HELPER, NAME, NAME_SEQ )	\
+		throw unable_to_determine_type( );\
+	} \
+	template< typename TAG, typename ... ARG > \
+	struct static_function_return_type_delegate \
+	{ \
+		BOOST_PP_CAT( any_, NAME ) * that;\
+		template< typename T > \
+		void operator( )( const T & t ) { that->static_function_return_type_inner< TAG, T, ARG ... >( t ); } \
+		static_function_return_type_delegate( BOOST_PP_CAT( any_, NAME ) * that ) : that( that ) { }\
+	};\
+	template< typename TAG, typename ... ARG > \
+	static_function_return_type_delegate< TAG, ARG ... > static_function_return_type( ... ) \
+	{ return static_function_return_type_delegate< TAG, ARG ... >( this ); }	\
+	template< typename TAG, typename K, typename ... ARG > \
+	void member_function_return_type_inner( const K & k ) \
+	{ \
+		BOOST_PP_SEQ_FOR_EACH( MEMBER_FUNCTION_RETURN_TYPE_HELPER, NAME, NAME_SEQ )	\
+		throw unable_to_determine_type( );\
+	} \
+	template< typename TAG, typename ... ARG > \
+	member_function_return_type_delegate< TAG, ARG ... > member_function_return_type( ... ) \
+	{ return member_function_return_type_delegate< TAG, ARG ... >( this ); }	\
 };
 #endif // ANY_HPP

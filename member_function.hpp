@@ -70,7 +70,6 @@ struct has_member_function
 	};
 	constexpr static bool value = has_member_function_inner< TTYPE, NNAME, AARG ... >::template function< TTYPE, NNAME, AARG ... >( nullptr );
 };
-
 template< typename TTYPE, typename NNAME, typename ... AARG >
 struct member_function_return_type
 {

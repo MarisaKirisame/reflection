@@ -63,5 +63,9 @@ void example( )
 	assert( ( tr.has_member_function< tag< func >, int >( ) ) );
 	tr.member_variable_type< tag< data > >( misc::make_expansion( [](tag<int>){ std::cout << "Test pass" << std::endl; },[](...){} ) );
 	tr.static_variable_type< tag< cache > >( misc::make_expansion( [](tag<long>){ std::cout << "Test pass" << std::endl; },[](...){} ) );
+	tr.member_function_return_type< tag< func >, int >( )(
+				misc::make_expansion( [](tag<double>){ std::cout << "Test pass" << std::endl; },[](...){} ) );
+	tr.static_function_return_type< tag< function > >( )(
+				misc::make_expansion( [](tag<int>){ std::cout << "Test pass" << std::endl; },[](...){} ) );
 }
 #endif //EXAMPLE_HPP
