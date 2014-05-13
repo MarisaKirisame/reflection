@@ -80,8 +80,19 @@ struct has_member_variable
 	};
 	static constexpr bool value = inner::function< TTYPE, NNAME >( nullptr );
 };
-template< typename TYPE, typename NAME >
-struct member_variable_type { typedef decltype( std::declval< TYPE * >( )->template get_member_variable_return_type< NAME, TYPE >( ) ) type; };
+template< typename TTYPE, typename NNAME >
+struct member_variable_type
+{
+	struct inner
+	{
+		template< typename TYPE, typename NAME >
+		static decltype( std::declval< TYPE * >( )->template get_member_variable_return_type< NAME, TYPE >( ) ) function(
+				typename std::enable_if< has_class< TYPE >::value >::type * );
+		template< typename TYPE, typename NAME >
+		static no_existence function( ... );
+	};
+	typedef decltype( inner::function< TTYPE, NNAME >( nullptr ) ) type;
+};
 template< typename TTYPE, typename NNAME >
 struct member_variable
 {

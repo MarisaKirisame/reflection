@@ -71,6 +71,17 @@ struct has_static_variable
 	};
 	static constexpr bool value = inner::function< TTYPE, NNAME >( nullptr );
 };
-template< typename TYPE, typename NAME >
-struct static_variable_type { typedef decltype( TYPE::template get_static_variable_return_type< NAME, TYPE >( ) ) type; };
+template< typename TTYPE, typename NNAME >
+struct static_variable_type
+{
+	struct inner
+	{
+		template< typename TYPE, typename NAME >
+		static decltype( TYPE::template get_static_variable_return_type< NAME, TYPE >( ) ) function(
+				typename std::enable_if< has_class< TYPE >::value >::type * );
+		template< typename TYPE, typename NAME >
+		static no_existence function( ... );
+	};
+	typedef decltype( inner::function< TTYPE, NNAME >( nullptr ) ) type;
+};
 #endif //STATIC_VARIABLE_HPP

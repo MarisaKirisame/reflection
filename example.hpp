@@ -12,10 +12,10 @@ struct test
 	int data = 12450;
 	double func( int ) const { return 10; }
 	static int function( ) { return 1; }
-	static int cache;
+	static long cache;
 	static decltype( & function ) bar( long, long time ) { if ( time == 0 ) { } return & function; }
 };
-int test::cache = 0;
+long test::cache = 0;
 DECLARE_ANY( test, EXAMPLE_NAME_SEQ )
 static_assert( has_member_function< test, tag< func >, long >::value, "" );
 static_assert( ! has_member_function< test, tag< func >, void * >::value , "" );
@@ -29,7 +29,7 @@ static_assert( ! has_static_function< test, tag< foo > >::value, "" );
 static_assert( has_static_variable< test, tag< cache > >::value, "" );
 static_assert( ! has_static_variable< test, tag< data > >::value, "" );
 static_assert( has_static_variable< test, tag< cache > >::value, "" );
-static_assert( std::is_same< static_variable_type< test, tag< cache > >::type, int >::value, "" );
+static_assert( std::is_same< static_variable_type< test, tag< cache > >::type, long >::value, "" );
 static_assert( has_static_function< test, tag< bar >, int, int >::value, "" );
 static_assert(
 		std::is_same
@@ -61,5 +61,7 @@ void example( )
 	tr.call_member_function< tag< function > >( ii );
 	assert( ( ! tr.has_static_function< tag< func >, int >( ) ) );
 	assert( ( tr.has_member_function< tag< func >, int >( ) ) );
+	tr.member_variable_type< tag< data > >( misc::make_expansion( [](tag<int>){ std::cout << "Test pass" << std::endl; },[](...){} ) );
+	tr.static_variable_type< tag< cache > >( misc::make_expansion( [](tag<long>){ std::cout << "Test pass" << std::endl; },[](...){} ) );
 }
 #endif //EXAMPLE_HPP

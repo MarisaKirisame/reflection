@@ -51,6 +51,18 @@
 	{ \
 		return ::has_member_function< ELEMENT, TAG, ARG ... >::value; \
 	}
+#define STATIC_VARIABLE_TYPE_HELPER( R, DATA, ELEMENT ) \
+	if ( any_typename == get_typename< ELEMENT >( )( ) ) \
+	{ \
+		k( tag< typename static_variable_type< ELEMENT, TAG >::type >( ) ); \
+		return; \
+	}
+#define MEMBER_VARIABLE_TYPE_HELPER( R, DATA, ELEMENT ) \
+if ( any_typename == get_typename< ELEMENT >( )( ) ) \
+	{ \
+		k( tag< typename member_variable_type< ELEMENT, TAG >::type >( ) ); \
+		return; \
+	}
 struct unable_to_determine_type : std::runtime_error
 {
 	unable_to_determine_type( ) : std::runtime_error( "Unable to determine the type." ) { }
@@ -230,6 +242,18 @@ struct BOOST_PP_CAT( any_, NAME ) \
 	bool has_member_function( ) \
 	{ \
 		BOOST_PP_SEQ_FOR_EACH( HAS_MEMBER_FUNCTION_HELPER, NAME, NAME_SEQ )	\
+		throw unable_to_determine_type( ); \
+	} \
+	template< typename TAG, typename K > \
+	void member_variable_type( const K & k ) \
+	{ \
+		BOOST_PP_SEQ_FOR_EACH( MEMBER_VARIABLE_TYPE_HELPER, NAME, NAME_SEQ )	\
+		throw unable_to_determine_type( ); \
+	} \
+	template< typename TAG, typename K > \
+	void static_variable_type( const K & k ) \
+	{ \
+		BOOST_PP_SEQ_FOR_EACH( STATIC_VARIABLE_TYPE_HELPER, NAME, NAME_SEQ )	\
 		throw unable_to_determine_type( ); \
 	} \
 };
