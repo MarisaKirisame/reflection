@@ -41,6 +41,16 @@
 		call_static_function_delegate< ELEMENT, TAG, K, ARG ... >( )( k, arg ... ); \
 		return;\
 	}
+#define HAS_STATIC_FUNCTION_HELPER( R, DATA, ELEMENT ) \
+	if ( any_typename == get_typename< ELEMENT >( )( ) ) \
+	{ \
+		return ::has_static_function< ELEMENT, TAG, ARG ... >::value; \
+	}
+#define HAS_MEMBER_FUNCTION_HELPER( R, DATA, ELEMENT ) \
+	if ( any_typename == get_typename< ELEMENT >( )( ) ) \
+	{ \
+		return ::has_member_function< ELEMENT, TAG, ARG ... >::value; \
+	}
 struct unable_to_determine_type : std::runtime_error
 {
 	unable_to_determine_type( ) : std::runtime_error( "Unable to determine the type." ) { }
@@ -210,5 +220,17 @@ struct BOOST_PP_CAT( any_, NAME ) \
 			inner::function< TT, TTAG, KK, AARG ... >( k, arg ... );\
 		}\
 	};\
+	template< typename TAG, typename ... ARG > \
+	bool has_static_function( ) \
+	{ \
+		BOOST_PP_SEQ_FOR_EACH( HAS_STATIC_FUNCTION_HELPER, NAME, NAME_SEQ )	\
+		throw unable_to_determine_type( ); \
+	} \
+	template< typename TAG, typename ... ARG > \
+	bool has_member_function( ) \
+	{ \
+		BOOST_PP_SEQ_FOR_EACH( HAS_MEMBER_FUNCTION_HELPER, NAME, NAME_SEQ )	\
+		throw unable_to_determine_type( ); \
+	} \
 };
 #endif // ANY_HPP

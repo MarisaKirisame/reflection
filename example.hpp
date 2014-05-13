@@ -59,5 +59,7 @@ void example( )
 	tr.call_member_function< func_tag >( 1, ii );
 	tr.call_static_function< function_tag >( ii );
 	tr.call_member_function< function_tag >( ii );
+	assert( ( ! tr.has_static_function< func_tag, int >( ) ) );
+	assert( ( tr.has_member_function< func_tag, int >( ) ) );
 }
 #endif //EXAMPLE_HPP
