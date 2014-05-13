@@ -17,49 +17,49 @@ struct test
 };
 int test::cache = 0;
 DECLARE_ANY( test, EXAMPLE_NAME_SEQ )
-static_assert( has_member_function< test, func_tag, long >::value, "" );
-static_assert( ! has_member_function< test, func_tag, void * >::value , "" );
-static_assert( std::is_same< typename member_function_return_type< test, func_tag, double >::type, double >::value, "" );
-static_assert( ! has_static_function< test, func_tag, void  >::value, "" );
-static_assert( has_static_function< test, function_tag >::value, "" );
-static_assert( ! has_static_function< test, func_tag >::value, "" );
-static_assert( std::is_same< static_function_return_type< test, function_tag, void >::type, int >::value, "" );
-static_assert( ! has_member_function< test, foo_tag, void >::value, "" );
-static_assert( ! has_static_function< test, foo_tag >::value, "" );
-static_assert( has_static_variable< test, cache_tag >::value, "" );
-static_assert( ! has_static_variable< test, data_tag >::value, "" );
-static_assert( has_static_variable< test, cache_tag >::value, "" );
-static_assert( std::is_same< static_variable_type< test, cache_tag >::type, int >::value, "" );
-static_assert( has_static_function< test, bar_tag, int, int >::value, "" );
+static_assert( has_member_function< test, tag< func >, long >::value, "" );
+static_assert( ! has_member_function< test, tag< func >, void * >::value , "" );
+static_assert( std::is_same< typename member_function_return_type< test, tag< func >, double >::type, double >::value, "" );
+static_assert( ! has_static_function< test, tag< func >, void  >::value, "" );
+static_assert( has_static_function< test, tag< function > >::value, "" );
+static_assert( ! has_static_function< test, tag< func > >::value, "" );
+static_assert( std::is_same< static_function_return_type< test, tag< function >, void >::type, int >::value, "" );
+static_assert( ! has_member_function< test, tag< foo >, void >::value, "" );
+static_assert( ! has_static_function< test, tag< foo > >::value, "" );
+static_assert( has_static_variable< test, tag< cache > >::value, "" );
+static_assert( ! has_static_variable< test, tag< data > >::value, "" );
+static_assert( has_static_variable< test, tag< cache > >::value, "" );
+static_assert( std::is_same< static_variable_type< test, tag< cache > >::type, int >::value, "" );
+static_assert( has_static_function< test, tag< bar >, int, int >::value, "" );
 static_assert(
 		std::is_same
 		<
-			decltype( call_static_function< test, bar_tag, int, int >( )( 0, 1 )( ) ),
+			decltype( call_static_function< test, tag< bar >, int, int >( )( 0, 1 )( ) ),
 			int
 		>::value, "" );
 static_assert(
 		std::is_same
 		<
-			decltype( call_member_function< test, func_tag, long >( )( std::declval< test >( ), ( 1 ) ) ),
+			decltype( call_member_function< test, tag< func >, long >( )( std::declval< test >( ), ( 1 ) ) ),
 			double
 		>::value, "" );
-static_assert( has_member_variable< test, data_tag >::value, "" );
-static_assert( ! has_member_variable< test, cache_tag >::value, "" );
-static_assert( std::is_same< member_variable_type< test, data_tag >::type, int >::value, "" );
+static_assert( has_member_variable< test, tag< data > >::value, "" );
+static_assert( ! has_member_variable< test, tag< cache > >::value, "" );
+static_assert( std::is_same< member_variable_type< test, tag< data > >::type, int >::value, "" );
 #include <iostream>
 void example( )
 {
 	test t;
 	any_test tr( t );
 	auto ii = misc::make_expansion( [](int i){ std::cout << i << std::endl; }, [](...){ std::cout << "Hello World" << std::endl; } );
-	tr.get_member_variable< data_tag >( ii );
-	tr.get_static_variable< cache_tag >( ii );
-	assert( ! tr.has_member_variable< cache_tag >( ) );
-	assert( tr.has_static_variable< cache_tag >( ) );
-	tr.call_member_function< func_tag >( 1, ii );
-	tr.call_static_function< function_tag >( ii );
-	tr.call_member_function< function_tag >( ii );
-	assert( ( ! tr.has_static_function< func_tag, int >( ) ) );
-	assert( ( tr.has_member_function< func_tag, int >( ) ) );
+	tr.get_member_variable< tag< data > >( ii );
+	tr.get_static_variable< tag< cache > >( ii );
+	assert( ! tr.has_member_variable< tag< cache > >( ) );
+	assert( tr.has_static_variable< tag< cache > >( ) );
+	tr.call_member_function< tag< func > >( 1, ii );
+	tr.call_static_function< tag< function > >( ii );
+	tr.call_member_function< tag< function > >( ii );
+	assert( ( ! tr.has_static_function< tag< func >, int >( ) ) );
+	assert( ( tr.has_member_function< tag< func >, int >( ) ) );
 }
 #endif //EXAMPLE_HPP

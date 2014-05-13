@@ -14,7 +14,7 @@
 			std::is_same \
 			< \
 				T, \
-				BOOST_PP_CAT( NAME, _tag ) \
+				::tag< NAME > \
 			>::value, \
 			typename std::add_pointer \
 			< \
@@ -28,7 +28,7 @@
 		std::is_same \
 		< \
 			T, \
-			BOOST_PP_CAT( NAME, _tag ) \
+			::tag< ::NAME > \
 		>::value, \
 		decltype( SELF::NAME( std::declval< R >( ) ... ) ) \
 	>::type \

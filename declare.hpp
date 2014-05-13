@@ -7,12 +7,14 @@
 #include "member_variable.hpp"
 #include "static_variable.hpp"
 #include "get_typename.hpp"
-#define DECLARE_NAME( NAME ) struct BOOST_PP_CAT( NAME, _tag ){ }; struct NAME;
+template< typename >
+struct tag{ };
+#define DECLARE_NAME( NAME ) struct NAME;
 #define DECLARE_NAMES_HELPER( R, DATA, ELEMENT ) DECLARE_NAME( ELEMENT );
 #define DECLARE_NAMES( NAME_SEQ ) BOOST_PP_SEQ_FOR_EACH( DECLARE_NAMES_HELPER, _, NAME_SEQ )
 #define DECLARE_TYPE( TYPE, NAME_SEQ ) \
 	static const char * get_typename( ) { return BOOST_PP_STRINGIZE( TYPE ); } \
-	typedef BOOST_PP_CAT( TYPE, _tag ) tag; \
+	typedef ::tag< ::TYPE > tag; \
 	template< typename ... > \
 	constexpr static bool has_member_function( ... ) { return false; } \
 	template< typename ... > \

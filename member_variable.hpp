@@ -10,7 +10,7 @@ constexpr static bool has_member_variable( \
 		std::is_same \
 		< \
 			T, \
-			BOOST_PP_CAT( NAME, _tag ) \
+			::tag< NAME > \
 		>::value && \
 		std::is_member_object_pointer< decltype( & SELF::NAME ) >::value, \
 		decltype( std::declval< SELF * >( )->NAME ) \
@@ -26,7 +26,7 @@ constexpr static bool has_member_variable( \
 				std::is_same \
 				< \
 					T, \
-					BOOST_PP_CAT( NAME, _tag ) \
+					::tag< NAME > \
 				>::value \
 			>::type, \
 			decltype( std::declval< SELF * >( )->NAME ) \
@@ -40,7 +40,7 @@ constexpr static bool has_member_variable( \
 			std::is_same \
 			< \
 				T, \
-				BOOST_PP_CAT( NAME, _tag ) \
+				::tag< ::NAME > \
 			>::value \
 		>::type, \
 		decltype( std::declval< SELF * >( )->NAME ) \
@@ -51,17 +51,17 @@ constexpr static bool has_member_variable( \
 		std::is_same \
 		< \
 			T, \
-			BOOST_PP_CAT( NAME, _tag ) \
+			::tag< ::NAME > \
 		>::value && has_member_variable< T, SELF >( nullptr ), \
 	typename enable_if_valid< decltype( std::declval< SELF * >( )->NAME ) >::type \
 	>::type invoke_member_variable( const K & k ) \
 	{ \
-		k( BOOST_PP_CAT( NAME, _tag )( ), static_cast< SELF * >( this )->NAME ); \
+		k( ::tag< ::NAME >( ), static_cast< SELF * >( this )->NAME ); \
 	}
 #define INVOKE_ALL_MEMBER_VARIABLE_HELPER( R, DATA, ELEMENT ) \
 	invoke_member_variable \
 	< \
-		BOOST_PP_CAT( ELEMENT, _tag ), \
+		::tag< ::ELEMENT >, \
 		typename std::remove_reference< typename std::remove_cv< decltype( * this ) >::type >::type, \
 		typename std::remove_cv< decltype( DATA ) >::type \
 	>( DATA );

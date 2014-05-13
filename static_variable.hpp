@@ -9,7 +9,7 @@ constexpr static bool has_static_variable( \
 		std::is_same \
 		< \
 			T, \
-			BOOST_PP_CAT( NAME, _tag ) \
+			::tag< ::NAME > \
 		>::value && \
 		! std::is_member_object_pointer< decltype( & SELF::NAME ) >::value \
 	>::type * ) \
@@ -25,7 +25,7 @@ constexpr static bool has_static_variable( \
 				std::is_same \
 				< \
 					T, \
-					BOOST_PP_CAT( NAME, _tag ) \
+					::tag< ::NAME > \
 				>::value \
 			>::type, \
 			decltype( SELF::NAME ) \
@@ -40,7 +40,7 @@ constexpr static bool has_static_variable( \
 			std::is_same \
 			< \
 				T, \
-				BOOST_PP_CAT( NAME, _tag ) \
+				::tag< ::NAME > \
 			>::value \
 		>::type, \
 		decltype( SELF::NAME ) \
