@@ -4,74 +4,73 @@
 #include <boost/preprocessor/cat.hpp>
 #include <boost/preprocessor/seq/for_each.hpp>
 #include <memory>
-#include <get_typename.hpp>
 #include <member_variable.hpp>
 #include <static_variable.hpp>
 #include <member_function.hpp>
 #define GET_MEMBER_VARIABLE_HELPER( R, DATA, ELEMENT ) \
-	if ( any_typename == get_typename< ELEMENT >( )( ) ) \
+	if ( any_typename == tag< ELEMENT >::name( ) ) \
 	{ \
 		k( member_variable< ELEMENT, TAG >( )( * static_cast< ELEMENT * >( any_data->data ) ) ); \
 		return;\
 	}
 #define HAS_MEMBER_VARIABLE_HELPER( R, DATA, ELEMENT ) \
-	if ( any_typename == get_typename< ELEMENT >( )( ) ) \
+	if ( any_typename == tag< ELEMENT >::name( ) ) \
 	{ \
 		return ::has_member_variable< ELEMENT, TAG >::value; \
 	}
 #define HAS_STATIC_VARIABLE_HELPER( R, DATA, ELEMENT ) \
-	if ( any_typename == get_typename< ELEMENT >( )( ) ) \
+	if ( any_typename == tag< ELEMENT >::name( ) ) \
 	{ \
 		return ::has_static_variable< ELEMENT, TAG >::value; \
 	}
 #define GET_STATIC_VARIABLE_HELPER( R, DATA, ELEMENT ) \
-	if ( any_typename == get_typename< ELEMENT >( )( ) ) \
+	if ( any_typename == tag< ELEMENT >::name( ) ) \
 	{ \
 		k( static_variable< ELEMENT, TAG >( )( ) ); \
 		return;\
 	}
 #define CALL_MEMBER_FUNCTION_HELPER( R, DATA, ELEMENT ) \
-	if ( any_typename == get_typename< ELEMENT >( )( ) )  \
+	if ( any_typename == tag< ELEMENT >::name( ) )  \
 	{ \
 		call_member_function_delegate< ELEMENT, TAG, K, ARG ... >( )( static_cast< ELEMENT * >( any_data->data ), k, arg ... ); \
 		return;\
 	}
 #define CALL_STATIC_FUNCTION_HELPER( R, DATA, ELEMENT ) \
-	if ( any_typename == get_typename< ELEMENT >( )( ) )  \
+	if ( any_typename == tag< ELEMENT >::name( ) )  \
 	{ \
 		call_static_function_delegate< ELEMENT, TAG, K, ARG ... >( )( k, arg ... ); \
 		return;\
 	}
 #define HAS_STATIC_FUNCTION_HELPER( R, DATA, ELEMENT ) \
-	if ( any_typename == get_typename< ELEMENT >( )( ) ) \
+	if ( any_typename == tag< ELEMENT >::name( ) ) \
 	{ \
 		return ::has_static_function< ELEMENT, TAG, ARG ... >::value; \
 	}
 #define HAS_MEMBER_FUNCTION_HELPER( R, DATA, ELEMENT ) \
-	if ( any_typename == get_typename< ELEMENT >( )( ) ) \
+	if ( any_typename == tag< ELEMENT >::name( ) ) \
 	{ \
 		return ::has_member_function< ELEMENT, TAG, ARG ... >::value; \
 	}
 #define STATIC_VARIABLE_TYPE_HELPER( R, DATA, ELEMENT ) \
-	if ( any_typename == get_typename< ELEMENT >( )( ) ) \
+	if ( any_typename == tag< ELEMENT >::name( ) ) \
 	{ \
 		k( tag< typename static_variable_type< ELEMENT, TAG >::type >( ) ); \
 		return; \
 	}
 #define MEMBER_VARIABLE_TYPE_HELPER( R, DATA, ELEMENT ) \
-if ( any_typename == get_typename< ELEMENT >( )( ) ) \
+if ( any_typename == tag< ELEMENT >::name( ) ) \
 	{ \
 		k( tag< typename member_variable_type< ELEMENT, TAG >::type >( ) ); \
 		return; \
 	}
 #define MEMBER_FUNCTION_RETURN_TYPE_HELPER( R, DATA, ELEMENT ) \
-if ( any_typename == get_typename< ELEMENT >( )( ) ) \
+if ( any_typename == tag< ELEMENT >::name( ) ) \
 { \
 	k( ::tag< typename ::member_function_return_type< ELEMENT, TAG, ARG ... >::type >( ) ); \
 	return;\
 }
 #define STATIC_FUNCTION_RETURN_TYPE_HELPER( R, DATA, ELEMENT ) \
-if ( any_typename == get_typename< ELEMENT >( )( ) ) \
+if ( any_typename == tag< ELEMENT >::name( ) ) \
 { \
 	k( ::tag< typename ::static_function_return_type< ELEMENT, TAG, ARG ... >::type >( ) ); \
 	return;\
@@ -81,13 +80,13 @@ struct unable_to_determine_type : std::runtime_error
 	unable_to_determine_type( ) : std::runtime_error( "Unable to determine the type." ) { }
 };
 #define DECLARE_ANY( NAME, NAME_SEQ ) \
-struct BOOST_PP_CAT( any_, NAME ) \
+struct NAME \
 {	\
 	struct loop_tag{ };\
 	std::string any_typename; \
 	template< typename T > \
-	BOOST_PP_CAT( any_, NAME )( const T & t ) : \
-		any_typename( get_typename< T >( )( ) ), \
+	NAME( const T & t ) : \
+		any_typename( tag< T >::name( ) ), \
 		any_data( new any_internal_implement< typename std::remove_reference< T >::type >( t ) ) \
 	{ \
 		if ( any_typename.empty( ) )\
@@ -97,8 +96,8 @@ struct BOOST_PP_CAT( any_, NAME ) \
 		} \
 	} \
 	template< typename T > \
-	BOOST_PP_CAT( any_, NAME )( T && t ) : \
-		any_typename( get_typename< T >( )( ) ),\
+	NAME( T && t ) : \
+		any_typename( tag< typename std::remove_reference< T >::type >::name( ) ),\
 		any_data( new any_internal_implement< typename std::remove_reference< T >::type >( t ) ) \
 		{ \
 			if ( any_typename.empty( ) )\
@@ -122,7 +121,7 @@ struct BOOST_PP_CAT( any_, NAME ) \
 		{ delete static_cast< T * >( data ); }\
 	}; \
 	any_internal * any_data; \
-	~BOOST_PP_CAT( any_, NAME )( ) { delete any_data; }	\
+	~NAME( ) { delete any_data; }	\
 	template< typename TAG, typename CPS > \
 	void get_member_variable( CPS & k ) \
 	{ \
@@ -272,10 +271,10 @@ struct BOOST_PP_CAT( any_, NAME ) \
 	template< typename TAG, typename ... ARG > \
 	struct member_function_return_type_delegate \
 	{ \
-		BOOST_PP_CAT( any_, NAME ) * that;\
+		NAME * that;\
 		template< typename T > \
 		void operator( )( const T & t ) { that->member_function_return_type_inner< TAG, T, ARG ... >( t ); } \
-		member_function_return_type_delegate( BOOST_PP_CAT( any_, NAME ) * that ) : that( that ) { }\
+		member_function_return_type_delegate( NAME * that ) : that( that ) { }\
 	};\
 	template< typename TAG, typename K, typename ... ARG > \
 	void static_function_return_type_inner( const K & k ) \
@@ -286,10 +285,10 @@ struct BOOST_PP_CAT( any_, NAME ) \
 	template< typename TAG, typename ... ARG > \
 	struct static_function_return_type_delegate \
 	{ \
-		BOOST_PP_CAT( any_, NAME ) * that;\
+		NAME * that;\
 		template< typename T > \
 		void operator( )( const T & t ) { that->static_function_return_type_inner< TAG, T, ARG ... >( t ); } \
-		static_function_return_type_delegate( BOOST_PP_CAT( any_, NAME ) * that ) : that( that ) { }\
+		static_function_return_type_delegate( NAME * that ) : that( that ) { }\
 	};\
 	template< typename TAG, typename ... ARG > \
 	static_function_return_type_delegate< TAG, ARG ... > static_function_return_type( ... ) \

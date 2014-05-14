@@ -1,13 +1,14 @@
 #ifndef HAS_CLASS_HPP
 #define HAS_CLASS_HPP
-template< typename TYPE >
+#include <type_traits>
+template< typename T >
 struct has_class
 {
+	template< typename TT >
+	static std::true_type function( decltype( std::declval< TT >( ).~TT( ) ) * );
 	template< typename ... >
-	constexpr static bool has_class_inner( ... ) { return false; }
-	template< typename T >
-	constexpr static bool has_class_inner( typename T::tag * ) { return true; }
-	constexpr static bool value = has_class_inner< TYPE >( nullptr );
-	constexpr bool operator( )( ... ) { return value; }
+	static std::false_type function( ... );
+	constexpr static bool value = decltype( function< T >( nullptr ) )::value;
 };
+
 #endif // HAS_CLASS_HPP

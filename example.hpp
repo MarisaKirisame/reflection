@@ -4,6 +4,7 @@
 #include "declare.hpp"
 #include "any.hpp"
 #include "../misc/misc.hpp"
+#include "object.hpp"
 #define EXAMPLE_NAME_SEQ (data)(cache)(func)(function)(foo)(bar)(test)
 DECLARE_NAMES( EXAMPLE_NAME_SEQ )
 struct test
@@ -16,7 +17,7 @@ struct test
 	static decltype( & function ) bar( long, long time ) { if ( time == 0 ) { } return & function; }
 };
 long test::cache = 0;
-DECLARE_ANY( test, EXAMPLE_NAME_SEQ )
+DECLARE_ANY( any_test, EXAMPLE_NAME_SEQ )
 static_assert( has_member_function< test, tag< func >, long >::value, "" );
 static_assert( ! has_member_function< test, tag< func >, void * >::value , "" );
 static_assert( std::is_same< typename member_function_return_type< test, tag< func >, double >::type, double >::value, "" );
@@ -43,6 +44,7 @@ static_assert(
 			decltype( call_member_function< test, tag< func >, long >( )( std::declval< test >( ), ( 1 ) ) ),
 			double
 		>::value, "" );
+static_assert( has_class< test >::value, "" );
 static_assert( has_member_variable< test, tag< data > >::value, "" );
 static_assert( ! has_member_variable< test, tag< cache > >::value, "" );
 static_assert( std::is_same< member_variable_type< test, tag< data > >::type, int >::value, "" );
@@ -67,5 +69,6 @@ void example( )
 				misc::make_expansion( [](tag<double>){ std::cout << "Test pass" << std::endl; },[](...){} ) );
 	tr.static_function_return_type< tag< function > >( )(
 				misc::make_expansion( [](tag<int>){ std::cout << "Test pass" << std::endl; },[](...){} ) );
+	object< any_test > ob;
 }
 #endif //EXAMPLE_HPP

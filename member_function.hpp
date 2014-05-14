@@ -6,6 +6,7 @@
 #include <type_traits>
 #include <boost/preprocessor/cat.hpp>
 #include <boost/preprocessor/tuple/to_seq.hpp>
+#include <has_class.hpp>
 #define DECLARE_POSSIBLE_MEMBER_FUNCTION( NAME ) \
 	template< typename T, typename SELF, typename ... R > \
 	constexpr static bool has_member_function( \

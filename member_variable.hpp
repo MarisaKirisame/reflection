@@ -1,7 +1,6 @@
 #ifndef MEMBER_VARIABLE_HPP
 #define MEMBER_VARIABLE_HPP
 #include "reflection.hpp"
-#include "has_class.hpp"
 #define DECLARE_POSSIBLE_MEMBER_VARIABLE( NAME ) \
 template< typename T, typename SELF > \
 constexpr static bool has_member_variable( \
@@ -67,7 +66,7 @@ constexpr static bool has_member_variable( \
 	>( DATA );
 #define INVOKE_ALL_MEMBER_VARIABLE( K, NAME_SEQ ) \
 	BOOST_PP_SEQ_FOR_EACH( INVOKE_ALL_MEMBER_VARIABLE_HELPER, K, NAME_SEQ )
-template< typename TTYPE, typename NNAME >
+template< typename TTYPE, typename TTAG >
 struct has_member_variable
 {
 	struct inner
@@ -78,7 +77,7 @@ struct has_member_variable
 		template< typename TYPE, typename NAME >
 		constexpr static bool function( ... ) { return false; }
 	};
-	static constexpr bool value = inner::function< TTYPE, NNAME >( nullptr );
+	static constexpr bool value = inner::function< TTYPE, TTAG >( nullptr );
 };
 template< typename TTYPE, typename NNAME >
 struct member_variable_type

@@ -2,18 +2,26 @@
 #define DECLARE_HPP
 #include <boost/preprocessor/if.hpp>
 #include <boost/preprocessor/seq/for_each.hpp>
+#include <boost/preprocessor/stringize.hpp>
 #include "member_function.hpp"
 #include "static_function.hpp"
 #include "member_variable.hpp"
 #include "static_variable.hpp"
-#include "get_typename.hpp"
 template< typename >
 struct tag{ };
-#define DECLARE_NAME( NAME ) struct NAME;
+#define DECLARE_NAME( NAME ) \
+	struct NAME; \
+	template< > \
+	struct tag< NAME > \
+	{ \
+		static constexpr const char * name( ) \
+		{ \
+			return BOOST_PP_STRINGIZE( NAME ); \
+		} \
+	};
 #define DECLARE_NAMES_HELPER( R, DATA, ELEMENT ) DECLARE_NAME( ELEMENT );
 #define DECLARE_NAMES( NAME_SEQ ) BOOST_PP_SEQ_FOR_EACH( DECLARE_NAMES_HELPER, _, NAME_SEQ )
 #define DECLARE_TYPE( TYPE, NAME_SEQ ) \
-	static const char * get_typename( ) { return BOOST_PP_STRINGIZE( TYPE ); } \
 	typedef ::tag< ::TYPE > tag; \
 	template< typename ... > \
 	constexpr static bool has_member_function( ... ) { return false; } \
