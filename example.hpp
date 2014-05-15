@@ -11,34 +11,22 @@ struct test
 {
 	int data = 12450;
 	double func( int ) const { return 10; }
+	double func( int, int ) const { return 10; }
 	static int function( ) { return 1; }
 	static long cache;
 	static decltype( & function ) bar( long, long time ) { if ( time == 0 ) { } return & function; }
 };
-template< >
-struct helper< test >
-{
-	DECLARE_ALL_POSSIBLE_STATIC_VARIABLE( EXAMPLE_NAME_SEQ )
-	DECLARE_ALL_POSSIBLE_MEMBER_VARIABLE( EXAMPLE_NAME_SEQ )
-	DECLARE_ALL_POSSIBLE_STATIC_FUNCTION( EXAMPLE_NAME_SEQ )
-	DECLARE_ALL_POSSIBLE_MEMBER_FUNCTION( EXAMPLE_NAME_SEQ )
-	template< typename SELF, typename K >
-	static void
-	invoke_all_member_variable( SELF * t, const K & k )
-	{
-		INVOKE_ALL_MEMBER_VARIABLE( k, EXAMPLE_NAME_SEQ )
-	}
-};
+DECLARE_ALL( EXAMPLE_NAME_SEQ )
 long test::cache = 1230;
 DECLARE_ANY( any_test, EXAMPLE_NAME_SEQ )
-static_assert( has_member_function< test, tag< func >, long >::value, "" );
+static_assert( has_member_function< test, tag< func >, long, long >::value, "" );
 static_assert( ! has_member_function< test, tag< func >, void * >::value , "" );
 static_assert( std::is_same< member_function_return_type< test, tag< func >, double >::type, double >::value, "" );
 static_assert( ! has_static_function< test, tag< func >, void  >::value, "" );
 static_assert( has_static_function< test, tag< function > >::value, "" );
 static_assert( ! has_static_function< test, tag< func > >::value, "" );
 static_assert( std::is_same< static_function_return_type< test, tag< function >, void >::type, int >::value, "" );
-static_assert( ! has_member_function< test, tag< foo >, void >::value, "" );
+static_assert( ! has_member_function< test, tag< function >, void >::value, "" );
 static_assert( ! has_static_function< test, tag< foo > >::value, "" );
 static_assert( has_static_variable< test, tag< cache > >::value, "" );
 static_assert( ! has_static_variable< test, tag< data > >::value, "" );

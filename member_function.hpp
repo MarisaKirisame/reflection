@@ -17,7 +17,7 @@
 				TAG, \
 				::tag< NAME > \
 			>::value && \
-			std::is_member_function_pointer< decltype( & SELF::NAME ) >::value, \
+			! ::has_static_function< SELF, TAG, ARG ... >::value, \
 			typename std::add_pointer \
 			< \
 				decltype( std::declval< SELF * >( )->NAME( std::declval< ARG >( ) ... ) ) \

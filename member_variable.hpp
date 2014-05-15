@@ -10,7 +10,7 @@
 		typename std::remove_cv< decltype( DATA ) >::type \
 	>( t, DATA );
 #define INVOKE_ALL_MEMBER_VARIABLE( K, NAME_SEQ ) \
-	BOOST_PP_LIST_FOR_EACH( INVOKE_ALL_MEMBER_VARIABLE_HELPER, K, BOOST_PP_SEQ_TO_LIST( NAME_SEQ ) )
+	BOOST_PP_SEQ_FOR_EACH( INVOKE_ALL_MEMBER_VARIABLE_HELPER, K, NAME_SEQ )
 #define DECLARE_POSSIBLE_MEMBER_VARIABLE( NAME, NAME_SEQ ) \
 	template< typename SELF, typename TAG > \
 	constexpr static bool has_member_variable( \
