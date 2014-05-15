@@ -24,7 +24,7 @@ struct object_base
 	bool has_static_variable( )
 	{
 		return
-				::has_static_variable< CRTP, TAG >::value ||
+				has_static_variable< CRTP, TAG >( ) ||
 				( static_variable( ).count( TAG::name( ) ) > 0 );
 	}
 	virtual ~object_base( ) { }

@@ -1,13 +1,9 @@
 #ifndef STATIC_FUNCTION_HPP
 #define STATIC_FUNCTION_HPP
 #include "reflection.hpp"
-#include <boost/preprocessor/enum.hpp>
-#include <boost/preprocessor/tuple/to_seq.hpp>
-#include <boost/preprocessor/tuple/enum.hpp>
-#include <boost/preprocessor/seq/to_tuple.hpp>
-#include <boost/preprocessor/seq/transform.hpp>
+#include <boost/preprocessor.hpp>
 #define DECLARE_POSSIBLE_STATIC_FUNCTION( NAME ) \
-	template< typename T, typename SELF, typename ... R > \
+	template< typename SELF, typename T, typename ... R > \
 	constexpr static bool has_static_function( \
 		typename std::enable_if \
 		< \
@@ -22,7 +18,7 @@
 			>::type \
 		>::type ) \
 	{ return true; } \
-	template< typename T, typename SELF, typename ... R > \
+	template< typename SELF, typename T, typename ... R > \
 	typename std::enable_if \
 	< \
 		std::is_same \
@@ -41,7 +37,7 @@ struct static_function_return_type
 	{
 		template< typename TYPE, typename NAME, typename ... ARG >
 		static decltype(
-				TYPE::template call_static_function< NAME, TYPE >(
+				helper< TYPE >::template call_static_function< TYPE, NAME >(
 					std::declval< ARG >( ) ... ) ) function( void * );
 		template< typename ... >
 		static no_existence function( ... );
@@ -51,45 +47,28 @@ struct static_function_return_type
 	{
 		template< typename TYPE, typename NAME, typename ... >
 		static decltype(
-				TYPE::template call_static_function< NAME, TYPE >( ) ) function( void * );
+				helper< TYPE >::template call_static_function< TYPE, NAME >( ) ) function( void * );
 		template< typename ... >
 		static no_existence function( ... );
 	};
 	typedef decltype( inner< TTTYPE, NNNAME, AAARG ... >::template function< TTTYPE, NNNAME, AAARG ... >( nullptr ) ) type;
 };
-template< typename TTYPE, typename NNAME, typename ... AARG >
-struct has_static_function
-{
-	template< typename TTTYPE, typename NNNAME, typename ... AAARG >
-	struct inner
-	{
-		template< typename TYPE, typename NAME, typename ... ARG >
-		static constexpr bool function( typename std::enable_if< has_class< TYPE >::value >::type * ) { return TYPE::template has_static_function< NAME, TYPE, ARG ... >( nullptr ); }
-		template< typename ... >
-		static constexpr bool function( ... ) { return false; }
-	};
-	template< typename TTTYPE, typename NNNAME >
-	struct inner< TTTYPE, NNNAME, void >
-	{
-		template< typename TYPE, typename NAME >
-		static constexpr bool function( typename std::enable_if< has_class< TYPE >::value >::type * ) { return TYPE::template has_static_function< NAME, TYPE >( nullptr ); }
-		template< typename ... >
-		static constexpr bool function( ... ) { return false; }
-	};
-	constexpr static bool value = inner< TTYPE, NNAME, AARG ... >::template function< TTYPE, NNAME, AARG ... >( nullptr );
-};
+template< typename TYPE, typename TAG, typename ... ARG >
+struct has_static_function { constexpr static bool value = false; };
 template< typename TYPE, typename NAME, typename ... ARG >
 struct call_static_function
 {
-	decltype( TYPE::template call_static_function< NAME, TYPE >( std::declval< ARG >( ) ... ) )
+	decltype( helper< TYPE >::template call_static_function< TYPE, NAME >( std::declval< ARG >( ) ... ) )
 	operator ( )( const ARG & ... r )
-	{ return TYPE::template call_static_function< NAME, TYPE >( r ... ); }
+	{ return helper< TYPE >::template call_static_function< TYPE, NAME >( r ... ); }
 };
 template< typename TYPE, typename NAME >
 struct call_static_function< TYPE, NAME, void >
 {
-	decltype( TYPE::template call_static_function< NAME, TYPE >( ) )
+	decltype( helper< TYPE >::template call_static_function< NAME, TYPE >( ) )
 	operator ( )( )
-	{ return TYPE::template call_static_function< NAME, TYPE >( ); }
+	{ return helper< TYPE >::template call_static_function< NAME, TYPE >( ); }
 };
+#define DECLARE_ALL_POSSIBLE_STATIC_FUNCTION_HELPER( R, DATA, ELEMENT ) DECLARE_POSSIBLE_STATIC_FUNCTION( ELEMENT )
+#define DECLARE_ALL_POSSIBLE_STATIC_FUNCTION( NAME_SEQ ) BOOST_PP_SEQ_FOR_EACH( DECLARE_ALL_POSSIBLE_STATIC_FUNCTION_HELPER, _, NAME_SEQ )
 #endif //STATIC_FUNCTION_HPP

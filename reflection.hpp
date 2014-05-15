@@ -18,4 +18,5 @@ template< typename T, typename RET = void >
 struct enable_if_valid { typedef RET type; };
 struct ignore { ignore( ... ) { } };
 struct no_existence{ };
+template < typename > struct helper;
 #endif //REFLECTION_HPP

@@ -10,7 +10,7 @@
 #define GET_MEMBER_VARIABLE_HELPER( R, DATA, ELEMENT ) \
 	if ( any_typename == tag< ELEMENT >::name( ) ) \
 	{ \
-		k( member_variable< ELEMENT, TAG >( )( * static_cast< ELEMENT * >( any_data->data ) ) ); \
+		k( member_variable< ELEMENT, TAG >( )( static_cast< ELEMENT * >( any_data->data ) ) ); \
 		return;\
 	}
 #define HAS_MEMBER_VARIABLE_HELPER( R, DATA, ELEMENT ) \
