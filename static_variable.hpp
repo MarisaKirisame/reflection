@@ -2,6 +2,7 @@
 #define STATIC_VARIABLE_HPP
 #include <boost/preprocessor.hpp>
 #include "reflection.hpp"
+#include "has_class.hpp"
 #define DECLARE_POSSIBLE_STATIC_VARIABLE( NAME ) \
 	template< typename SELF, typename TAG > \
 	constexpr static bool has_static_variable( \
@@ -59,10 +60,36 @@
 	>::type static_variable_type( );
 #define DECLARE_ALL_POSSIBLE_STATIC_VARIABLE_HELPER( R, TYPE, NAME ) DECLARE_POSSIBLE_STATIC_VARIABLE( NAME )
 #define DECLARE_ALL_POSSIBLE_STATIC_VARIABLE( NAME_SEQ ) BOOST_PP_SEQ_FOR_EACH( DECLARE_ALL_POSSIBLE_STATIC_VARIABLE_HELPER, _, NAME_SEQ )
-template< typename T, typename TAG >
-struct static_variable { no_existence operator( )( ... ) { return no_existence( ); } };
-template< typename T, typename TAG >
-struct has_static_variable { constexpr static bool value = false; };
-template< typename T, typename TAG >
-struct static_variable_type { typedef no_existence type; };
+template< typename TYPE, typename TAG >
+struct has_static_variable
+{
+	template< typename TTYPE, typename TTAG >
+	constexpr static
+	decltype( helper< TTYPE >::template has_static_variable< TTYPE, TTAG >( nullptr ) )
+	function( void * )
+	{ return helper< TTYPE >::template has_static_variable< TTYPE, TTAG >( nullptr ); }
+	template< typename ... >
+	constexpr static bool function( ... ) { return false; }
+	constexpr static bool value = function< TYPE, TAG >( nullptr );
+};
+template< typename TYPE, typename TAG >
+struct static_variable_type
+{
+	template< typename TTYPE, typename TTAG >
+	static decltype( helper< TTYPE >::template static_variable_type< TTYPE, TTAG >( ) ) function( void * );
+	template< typename ... >
+	static no_existence function( ... );
+	typedef decltype( function< TYPE, TAG >( nullptr ) ) type;
+};
+template< typename TYPE, typename TAG >
+struct static_variable
+{
+	template< typename TTYPE, typename TTAG >
+	static decltype( helper< TTYPE >::template static_variable< TTYPE, TTAG >( ) ) function( void * )
+	{ return helper< TTYPE >::template static_variable< TTYPE, TTAG >( ); }
+	template< typename ... >
+	static no_existence function( ... ) { return no_existence( ); }
+	decltype( function< TYPE, TAG >( nullptr ) )
+	operator ( )( ) { return function< TYPE, TAG >( nullptr ); }
+};
 #endif //STATIC_VARIABLE_HPP

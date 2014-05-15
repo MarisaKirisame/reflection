@@ -53,8 +53,34 @@ struct static_function_return_type
 	};
 	typedef decltype( inner< TTTYPE, NNNAME, AAARG ... >::template function< TTTYPE, NNNAME, AAARG ... >( nullptr ) ) type;
 };
-template< typename TYPE, typename TAG, typename ... ARG >
-struct has_static_function { constexpr static bool value = false; };
+template< typename TYPE, typename TAG, typename ... AARG >
+struct has_static_function
+{
+	template< typename, typename, typename ... >
+	struct inner
+	{
+		template< typename TTYPE, typename TTAG, typename ... ARG >
+		static constexpr typename
+		std::enable_if
+		<
+			helper< TTYPE >::template has_static_function< TTYPE, TTAG, ARG ... >( nullptr ) || true,
+			bool
+		>::type function( typename std::enable_if< has_class< TTYPE >::value >::type * )
+		{ return helper< TTYPE >::template has_static_function< TTYPE, TAG, ARG ... >( nullptr ); }
+		template< typename ... >
+		static constexpr bool function( ... ) { return false; }
+	};
+	template< typename T1, typename T2 >
+	struct inner< T1, T2, void >
+	{
+		template< typename TTYPE, typename TTAG >
+		static constexpr bool function( typename std::enable_if< has_class< TYPE >::value >::type * )
+		{ return helper< TTYPE >::template has_static_function< TTYPE, TTAG >( nullptr ); }
+		template< typename ... >
+		static constexpr bool function( ... ) { return false; }
+	};
+	constexpr static bool value = inner< TYPE, TAG, AARG ... >::template function< TYPE, TAG, AARG ... >( nullptr );
+};
 template< typename TYPE, typename NAME, typename ... ARG >
 struct call_static_function
 {

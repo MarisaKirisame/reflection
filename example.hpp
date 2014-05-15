@@ -22,8 +22,13 @@ struct helper< test >
 	DECLARE_ALL_POSSIBLE_MEMBER_VARIABLE( EXAMPLE_NAME_SEQ )
 	DECLARE_ALL_POSSIBLE_STATIC_FUNCTION( EXAMPLE_NAME_SEQ )
 	DECLARE_ALL_POSSIBLE_MEMBER_FUNCTION( EXAMPLE_NAME_SEQ )
+	template< typename SELF, typename K >
+	static void
+	invoke_all_member_variable( SELF * t, const K & k )
+	{
+		INVOKE_ALL_MEMBER_VARIABLE( k, EXAMPLE_NAME_SEQ )
+	}
 };
-DECLARE_INTERFACE( test )
 long test::cache = 1230;
 DECLARE_ANY( any_test, EXAMPLE_NAME_SEQ )
 static_assert( has_member_function< test, tag< func >, long >::value, "" );
@@ -57,10 +62,15 @@ static_assert( has_member_variable< test, tag< data > >::value, "" );
 static_assert( ! has_member_variable< test, tag< cache > >::value, "" );
 static_assert( std::is_same< member_variable_type< test, tag< data > >::type, int >::value, "" );
 #include <iostream>
+template< typename T, typename K >
+void invoke_all_member_variable( T & t, const K & k )
+{
+	helper< T >::template invoke_all_member_variable< T, K >( & t, k );
+}
 void example( )
 {
 	test t;
-	//t.invoke_all_member_variable( misc::make_expansion( []( tag< data >, int i ){ std::cout << i; }, [](...){} ) );
+	invoke_all_member_variable( t, misc::make_expansion( []( tag< data >, int i ){ std::cout << i; }, [](...){} ) );
 	any_test tr( t );
 	auto ii = misc::make_expansion( [](int i){ std::cout << i << std::endl; }, [](...){ std::cout << "Hello World" << std::endl; } );
 	tr.get_member_variable< tag< data > >( ii );

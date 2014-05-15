@@ -2,7 +2,16 @@
 #define MEMBER_VARIABLE_HPP
 #include "reflection.hpp"
 #include <boost/preprocessor.hpp>
-#define DECLARE_POSSIBLE_MEMBER_VARIABLE( NAME ) \
+#define INVOKE_ALL_MEMBER_VARIABLE_HELPER( R, DATA, ELEMENT ) \
+	invoke_member_variable \
+	< \
+		typename std::remove_reference< typename std::remove_cv< decltype( * t ) >::type >::type, \
+		::tag< ::ELEMENT >, \
+		typename std::remove_cv< decltype( DATA ) >::type \
+	>( t, DATA );
+#define INVOKE_ALL_MEMBER_VARIABLE( K, NAME_SEQ ) \
+	BOOST_PP_LIST_FOR_EACH( INVOKE_ALL_MEMBER_VARIABLE_HELPER, K, BOOST_PP_SEQ_TO_LIST( NAME_SEQ ) )
+#define DECLARE_POSSIBLE_MEMBER_VARIABLE( NAME, NAME_SEQ ) \
 	template< typename SELF, typename TAG > \
 	constexpr static bool has_member_variable( \
 	typename std::enable_if \
@@ -57,31 +66,46 @@
 		decltype( std::declval< SELF * >( )->NAME ) \
 	>::type member_variable_type( ) { return static_cast< SELF * >( nullptr )->NAME; } \
 	template< typename SELF, typename TAG, typename K > \
-	typename std::enable_if \
+	static typename std::enable_if \
 	< \
 		std::is_same \
 		< \
 			TAG, \
 			::tag< ::NAME > \
-		>::value && has_member_variable< TAG, SELF >( nullptr ), \
+		>::value && has_member_variable< SELF, TAG >( nullptr ), \
 	typename enable_if_valid< decltype( std::declval< SELF * >( )->NAME ) >::type \
-	>::type invoke_member_variable( const K & k ) \
+	>::type invoke_member_variable( SELF * t, const K & k ) \
 	{ \
-		k( ::tag< ::NAME >( ), static_cast< SELF * >( this )->NAME ); \
-	}
-#define INVOKE_ALL_MEMBER_VARIABLE_HELPER( R, DATA, ELEMENT ) \
-	invoke_member_variable \
+		k( ::tag< ::NAME >( ), t->NAME ); \
+	} \
+	template< typename SELF, typename TAG, typename K > \
+	static typename std::enable_if \
 	< \
-		::tag< ::ELEMENT >, \
-		typename std::remove_reference< typename std::remove_cv< decltype( * this ) >::type >::type, \
-		typename std::remove_cv< decltype( DATA ) >::type \
-	>( DATA );
-#define INVOKE_ALL_MEMBER_VARIABLE( K, NAME_SEQ ) \
-	BOOST_PP_SEQ_FOR_EACH( INVOKE_ALL_MEMBER_VARIABLE_HELPER, K, NAME_SEQ )
+		std::is_same \
+		< \
+			TAG, \
+			::tag< ::NAME > \
+		>::value \
+	>::type invoke_member_variable( ... ) { }
 template< typename TYPE, typename TAG >
-struct has_member_variable { constexpr static bool value = false; };
+struct has_member_variable
+{
+	template< typename TTYPE, typename TTAG >
+	constexpr static decltype( helper< TTYPE >::template has_member_variable< TTYPE, TTAG >( nullptr ) ) function( void * )
+	{ return helper< TTYPE >::template has_member_variable< TTYPE, TTAG >( nullptr ); }
+	template< typename ... >
+	constexpr static bool function( ... ) { return false; }
+	constexpr static bool value = function< TYPE, TAG >( nullptr );
+};
 template< typename TYPE, typename TAG >
-struct member_variable_type { typedef no_existence type; };
+struct member_variable_type
+{
+	template< typename TTYPE, typename TTAG >
+	static decltype( helper< TTYPE >::template member_variable_type< TTYPE, TTAG >( ) ) function( void * );
+	template< typename ... >
+	static no_existence function( ... );
+	typedef decltype( function< TYPE, TAG >( nullptr ) ) type;
+};
 template< typename TTYPE, typename NNAME >
 struct member_variable
 {
@@ -100,6 +124,6 @@ struct member_variable
 	decltype( function< TTYPE, NNAME >( std::declval< TTYPE * >( ) ) ) operator ( )( TTYPE * t )
 	{ return function< TTYPE, NNAME >( t ); }
 };
-#define DECLARE_ALL_POSSIBLE_MEMBER_VARIABLE_HELPER( R, DATA, ELEMENT ) DECLARE_POSSIBLE_MEMBER_VARIABLE( ELEMENT )
-#define DECLARE_ALL_POSSIBLE_MEMBER_VARIABLE( NAME_SEQ ) BOOST_PP_SEQ_FOR_EACH( DECLARE_ALL_POSSIBLE_MEMBER_VARIABLE_HELPER, _, NAME_SEQ )
+#define DECLARE_ALL_POSSIBLE_MEMBER_VARIABLE_HELPER( R, DATA, ELEMENT ) DECLARE_POSSIBLE_MEMBER_VARIABLE( ELEMENT, DATA )
+#define DECLARE_ALL_POSSIBLE_MEMBER_VARIABLE( NAME_SEQ ) BOOST_PP_SEQ_FOR_EACH( DECLARE_ALL_POSSIBLE_MEMBER_VARIABLE_HELPER, NAME_SEQ, NAME_SEQ )
 #endif //MEMBER_VARIABLE_HPP
