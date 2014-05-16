@@ -57,6 +57,7 @@ void invoke_all_member_variable( T & t, const K & k )
 }
 void example( )
 {
+	string_to_tag( "data", [](...){} );
 	test t;
 	invoke_all_member_variable( t, misc::make_expansion( []( tag< data >, int i ){ std::cout << i; }, [](...){} ) );
 	any_test tr( t );

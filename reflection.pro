@@ -17,5 +17,6 @@ HEADERS += \
     static_variable.hpp \
     any.hpp \
     object.hpp \
-    has_class.hpp
+    has_class.hpp \
+    string_to_tag.hpp
 

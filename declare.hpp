@@ -7,6 +7,7 @@
 #include "static_function.hpp"
 #include "member_variable.hpp"
 #include "static_variable.hpp"
+#include "string_to_tag.hpp"
 template< typename >
 struct tag{ };
 #define DECLARE_NAME( R, DATA, NAME ) \
@@ -19,7 +20,9 @@ struct tag{ };
 			return BOOST_PP_STRINGIZE( NAME ); \
 		} \
 	};
-#define DECLARE_NAMES( NAME_SEQ ) BOOST_PP_SEQ_FOR_EACH( DECLARE_NAME, _, NAME_SEQ )
+#define DECLARE_NAMES( NAME_SEQ ) \
+	BOOST_PP_SEQ_FOR_EACH( DECLARE_NAME, _, NAME_SEQ ) \
+	DECLARE_STRING_TO_TAG( NAME_SEQ )
 #define DECLARE_TYPE( TYPE, NAME_SEQ ) \
 	template< typename ... > \
 	void invoke_member_variable( ... ) { } \

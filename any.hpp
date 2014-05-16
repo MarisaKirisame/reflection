@@ -7,40 +7,7 @@
 #include <member_variable.hpp>
 #include <static_variable.hpp>
 #include <member_function.hpp>
-#define GET_MEMBER_VARIABLE_HELPER( R, DATA, ELEMENT ) \
-	if ( any_typename == tag< ELEMENT >::name( ) ) \
-	{ \
-		k( member_variable< ELEMENT, TAG >( )( static_cast< ELEMENT * >( any_data->data ) ) ); \
-		return;\
-	}
-#define HAS_MEMBER_VARIABLE_HELPER( R, DATA, ELEMENT ) \
-	if ( any_typename == tag< ELEMENT >::name( ) ) \
-	{ \
-		return ::has_member_variable< ELEMENT, TAG >::value; \
-	}
-#define HAS_STATIC_VARIABLE_HELPER( R, DATA, ELEMENT ) \
-	if ( any_typename == tag< ELEMENT >::name( ) ) \
-	{ \
-		return ::has_static_variable< ELEMENT, TAG >::value; \
-	}
-#define GET_STATIC_VARIABLE_HELPER( R, DATA, ELEMENT ) \
-	if ( any_typename == tag< ELEMENT >::name( ) ) \
-	{ \
-		k( static_variable< ELEMENT, TAG >( )( ) ); \
-		return;\
-	}
-#define CALL_MEMBER_FUNCTION_HELPER( R, DATA, ELEMENT ) \
-	if ( any_typename == tag< ELEMENT >::name( ) )  \
-	{ \
-		call_member_function_delegate< ELEMENT, TAG, K, ARG ... >( )( static_cast< ELEMENT * >( any_data->data ), k, arg ... ); \
-		return;\
-	}
-#define CALL_STATIC_FUNCTION_HELPER( R, DATA, ELEMENT ) \
-	if ( any_typename == tag< ELEMENT >::name( ) )  \
-	{ \
-		call_static_function_delegate< ELEMENT, TAG, K, ARG ... >( )( k, arg ... ); \
-		return;\
-	}
+#include <string_to_tag.hpp>
 #define HAS_STATIC_FUNCTION_HELPER( R, DATA, ELEMENT ) \
 	if ( any_typename == tag< ELEMENT >::name( ) ) \
 	{ \
@@ -75,10 +42,6 @@ if ( any_typename == tag< ELEMENT >::name( ) ) \
 	k( ::tag< typename ::static_function_return_type< ELEMENT, TAG, ARG ... >::type >( ) ); \
 	return;\
 }
-struct unable_to_determine_type : std::runtime_error
-{
-	unable_to_determine_type( ) : std::runtime_error( "Unable to determine the type." ) { }
-};
 #define DECLARE_ANY( NAME, NAME_SEQ ) \
 struct NAME \
 {	\
@@ -123,44 +86,74 @@ struct NAME \
 	any_internal * any_data; \
 	~NAME( ) { delete any_data; }	\
 	template< typename TAG, typename CPS > \
-	void get_member_variable( CPS & k ) \
+	struct get_member_variable_helper \
 	{ \
-		BOOST_PP_SEQ_FOR_EACH( GET_MEMBER_VARIABLE_HELPER, NAME, NAME_SEQ )	\
-		throw unable_to_determine_type( ); \
-	} \
+		const CPS & k; \
+		NAME * that;\
+		template< typename T > \
+		void operator ( )( const tag< T > & ) const\
+		{ k( member_variable< T, TAG >( )( static_cast< T * >( that->any_data->data ) ) ); } \
+		get_member_variable_helper( NAME * that, const CPS & k ) : k( k ), that( that ) { } \
+	}; \
+	template< typename TAG, typename CPS > \
+	void get_member_variable( CPS & k ) \
+	{ string_to_tag( any_typename, get_member_variable_helper< TAG, CPS >( this, k ) ); } \
+	template< typename TAG > \
+	struct has_member_variable_helper \
+	{ \
+		bool & store_to; \
+		template< typename T > \
+		void operator ( )( const tag< T > & ) const\
+		{ store_to = ::has_member_variable< T, TAG >::value; } \
+		has_member_variable_helper( bool & store_to ) : store_to( store_to ) { } \
+	}; \
 	template< typename TAG > \
 	bool has_member_variable( ) \
 	{ \
-		BOOST_PP_SEQ_FOR_EACH( HAS_MEMBER_VARIABLE_HELPER, NAME, NAME_SEQ )	\
-		throw unable_to_determine_type( ); \
+		bool ret; \
+		string_to_tag( any_typename, has_member_variable_helper< TAG >( ret ) ); \
+		return ret;\
 	} \
+	template< typename TAG > \
+	struct has_static_variable_helper \
+	{ \
+		bool & store_to; \
+		template< typename T > \
+		void operator ( )( const tag< T > & ) const\
+		{ store_to = ::has_static_variable< T, TAG >::value; } \
+		has_static_variable_helper( bool & store_to ) : store_to( store_to ) { } \
+	}; \
 	template< typename TAG > \
 	bool has_static_variable( ) \
 	{ \
-		BOOST_PP_SEQ_FOR_EACH( HAS_STATIC_VARIABLE_HELPER, NAME, NAME_SEQ )	\
-		throw unable_to_determine_type( ); \
+		bool ret; \
+		string_to_tag( any_typename, has_static_variable_helper< TAG >( ret ) ); \
+		return ret; \
 	} \
 	template< typename TAG, typename CPS > \
-	void get_static_variable( CPS & k ) \
+	struct get_static_variable_helper \
 	{ \
-		BOOST_PP_SEQ_FOR_EACH( GET_STATIC_VARIABLE_HELPER, NAME, NAME_SEQ )	\
-		throw unable_to_determine_type( ); \
-	} \
+		const CPS & k; \
+		template< typename T > \
+		void operator ( )( const tag< T > & ) const  \
+		{ k( ::static_variable< T, TAG >( )( ) ); } \
+		get_static_variable_helper( const CPS & k ) : k( k ) { } \
+	}; \
+	template< typename TAG, typename CPS > \
+	void get_static_variable( CPS & k ) \
+	{ string_to_tag( any_typename, get_static_variable_helper< TAG, CPS >( k ) ); } \
 	template< typename TAG, typename ... ARG > \
 	void call_member_function( const ARG & ... r ) { call_member_function_loop< TAG >( r ..., loop_tag( ) ); }\
 	template< typename TAG, typename T, typename ... ARG > \
 	void call_member_function_loop( const T & t, const ARG & ... r ) \
-	{ call_member_function_loop< TAG >( r ..., t ); }\
+	{ call_member_function_loop< TAG >( r ..., t ); } \
 	template< typename TAG, typename T, typename ... ARG > \
 	void call_member_function_loop( const T & t, loop_tag, const ARG & ... r ) \
-	{ call_member_function_inner< TAG >( t, r ... ); }\
+	{ call_member_function_inner< TAG >( t, r ... ); } \
 	template< typename TAG, typename K, typename ... ARG > \
 	void call_member_function_inner( const K & k, const ARG & ... arg ) \
-	{ \
-		BOOST_PP_SEQ_FOR_EACH( CALL_MEMBER_FUNCTION_HELPER, NAME, NAME_SEQ )	\
-		throw unable_to_determine_type( );\
-	} \
-	template< typename TT, typename TTAG, typename KK, typename ... AARG > \
+	{ string_to_tag( any_typename, call_member_function_delegate< TAG, K, ARG ... >( this, k, arg ... ) ); } \
+	template< typename TTAG, typename KK, typename ... AARG > \
 	struct call_member_function_delegate \
 	{	\
 		struct inner \
@@ -190,10 +183,19 @@ struct NAME \
 			template< typename T, typename TAG, typename K, typename ... ARG > \
 			static void function( void *, const K & k, ... ) { k( no_existence( ) ); } \
 		}; \
-		void operator( )( TT * t, const KK & k, const AARG & ... arg ) \
-		{ \
-			inner::function< TT, TTAG, KK, AARG ... >( t, k, arg ... );\
-		} \
+		NAME * that; \
+		const KK & k; \
+		std::tuple< AARG ... > data; \
+		call_member_function_delegate( NAME * that, const KK & k, const AARG & ... a ) : that( that ), k( k ), data( a ... ) { }\
+		template< int i, typename T, typename ... ARG > \
+		typename std::enable_if< i == std::tuple_size< decltype( data ) >::value >::type \
+		func( const ARG & ... a ) const { inner::function< T, TTAG, KK, AARG ... >( static_cast< T * >( that->any_data->data ), k, a ... ); } \
+		template< int i, typename T, typename ... ARG > \
+		typename std::enable_if< i != std::tuple_size< decltype( data ) >::value >::type \
+		func( const ARG & ... a ) const { func< i + 1, T >( a ..., std::get< i >( data ) ); } \
+		template< typename T > \
+		void operator( )( const tag< T > & ) const\
+		{ func< 0, T >( ); } \
 	}; \
 	template< typename TAG, typename ... ARG > \
 	void call_static_function( const ARG & ... r ) { call_static_function_loop< TAG >( r ..., loop_tag( ) ); }\
@@ -205,11 +207,8 @@ struct NAME \
 	{ call_static_function_inner< TAG >( t, r ... ); } \
 	template< typename TAG, typename K, typename ... ARG > \
 	void call_static_function_inner( const K & k, const ARG & ... arg ) \
-	{ \
-		BOOST_PP_SEQ_FOR_EACH( CALL_STATIC_FUNCTION_HELPER, NAME, NAME_SEQ )	\
-		throw unable_to_determine_type( );\
-	} \
-	template< typename TT, typename TTAG, typename KK, typename ... AARG > \
+	{ string_to_tag( any_typename, call_static_function_delegate< TAG, K, ARG ... >( k, arg ... ) );	} \
+	template< typename TTAG, typename KK, typename ... AARG > \
 	struct call_static_function_delegate \
 	{	\
 		struct inner \
@@ -239,66 +238,118 @@ struct NAME \
 			template< typename T, typename TAG, typename K, typename ... ARG > \
 			static void function( const K & k, ... ) { k( no_existence( ) ); } \
 		}; \
-		void operator( )( const KK & k, const AARG & ... arg ) \
-		{ \
-			inner::function< TT, TTAG, KK, AARG ... >( k, arg ... );\
-		} \
+		const KK & k; \
+		std::tuple< AARG ... > data; \
+		template< int i, typename T, typename ... ARG > \
+		typename std::enable_if< i == std::tuple_size< decltype( data ) >::value >::type \
+		func( const ARG & ... a ) const { inner::function< T, TTAG, KK, AARG ... >( k, a ... ); } \
+		template< int i, typename T, typename ... ARG > \
+		typename std::enable_if< i != std::tuple_size< decltype( data ) >::value >::type \
+		func( const ARG & ... a ) const { func< i + 1, T >( a ..., std::get< i >( data ) ); } \
+		template< typename T > \
+		void operator( )( const tag< T > & ) const\
+		{ func< 0, T >( ); } \
+		call_static_function_delegate( const KK & k, const AARG & ... a ) : k( k ), data( a ... ) { } \
+	}; \
+	template< typename TAG, typename ... ARG > \
+	struct has_static_function_helper \
+	{ \
+		bool & store_to; \
+		template< typename T > \
+		void operator ( )( const tag< T > & ) const\
+		{ store_to = ::has_static_function< T, TAG, ARG ... >::value; } \
+		has_static_function_helper( bool & store_to ) : store_to( store_to ) { } \
 	}; \
 	template< typename TAG, typename ... ARG > \
 	bool has_static_function( ) \
 	{ \
-		BOOST_PP_SEQ_FOR_EACH( HAS_STATIC_FUNCTION_HELPER, NAME, NAME_SEQ )	\
-		throw unable_to_determine_type( ); \
+		bool ret; \
+		string_to_tag( any_typename, has_static_function_helper< TAG, ARG ... >( ret ) ); \
+		return ret; \
 	} \
+	template< typename TAG, typename ... ARG > \
+	struct has_member_function_helper \
+	{ \
+		bool & store_to; \
+		template< typename T > \
+		void operator ( )( const tag< T > & ) const\
+		{ store_to = ::has_member_function< T, TAG, ARG ... >::value; } \
+		has_member_function_helper( bool & store_to ) : store_to( store_to ) { } \
+	}; \
 	template< typename TAG, typename ... ARG > \
 	bool has_member_function( ) \
 	{ \
-		BOOST_PP_SEQ_FOR_EACH( HAS_MEMBER_FUNCTION_HELPER, NAME, NAME_SEQ )	\
-		throw unable_to_determine_type( ); \
+		bool ret; \
+		string_to_tag( any_typename, has_member_function_helper< TAG, ARG ... >( ret ) ); \
+		return ret; \
 	} \
+	template< typename TAG,  typename CPS > \
+	struct member_variable_type_helper \
+	{ \
+		const CPS & k; \
+		template< typename T > \
+		void operator ( )( const tag< T > & ) const\
+		{	k( tag< typename ::member_variable_type< T, TAG >::type >( ) ); } \
+		member_variable_type_helper( const CPS & k ) : k( k ) { } \
+	}; \
 	template< typename TAG, typename K > \
 	void member_variable_type( const K & k ) \
+	{ string_to_tag( any_typename, member_variable_type_helper< TAG, K >( k ) ); } \
+	template< typename TAG,  typename CPS > \
+	struct static_variable_type_helper \
 	{ \
-		BOOST_PP_SEQ_FOR_EACH( MEMBER_VARIABLE_TYPE_HELPER, NAME, NAME_SEQ )	\
-		throw unable_to_determine_type( ); \
-	} \
+		const CPS & k; \
+		template< typename T > \
+		void operator ( )( const tag< T > & ) const\
+		{	k( tag< typename ::static_variable_type< T, TAG >::type >( ) ); } \
+		static_variable_type_helper( const CPS & k ) : k( k ) { } \
+	}; \
 	template< typename TAG, typename K > \
 	void static_variable_type( const K & k ) \
-	{ \
-		BOOST_PP_SEQ_FOR_EACH( STATIC_VARIABLE_TYPE_HELPER, NAME, NAME_SEQ )	\
-		throw unable_to_determine_type( ); \
-	} \
+	{ string_to_tag( any_typename, static_variable_type_helper< TAG, K >( k ) ); } \
 	template< typename TAG, typename ... ARG > \
 	struct member_function_return_type_delegate \
 	{ \
-		NAME * that;\
+		NAME * that; \
 		template< typename T > \
 		void operator( )( const T & t ) { that->member_function_return_type_inner< TAG, T, ARG ... >( t ); } \
 		member_function_return_type_delegate( NAME * that ) : that( that ) { }\
-	};\
+	}; \
+	template< typename TAG,  typename CPS, typename ... ARG > \
+	struct static_function_return_type_helper \
+	{ \
+		const CPS & k; \
+		template< typename T > \
+		void operator ( )( const tag< T > & ) const\
+		{	k( ::tag< typename ::static_function_return_type< T, TAG, ARG ... >::type >( ) ); } \
+		static_function_return_type_helper( const CPS & k ) : k( k ) { } \
+	}; \
 	template< typename TAG, typename K, typename ... ARG > \
 	void static_function_return_type_inner( const K & k ) \
-	{ \
-		BOOST_PP_SEQ_FOR_EACH( STATIC_FUNCTION_RETURN_TYPE_HELPER, NAME, NAME_SEQ )	\
-		throw unable_to_determine_type( );\
-	} \
+	{ string_to_tag( any_typename, static_function_return_type_helper< TAG, K, ARG ... >( k ) ); } \
 	template< typename TAG, typename ... ARG > \
 	struct static_function_return_type_delegate \
 	{ \
 		NAME * that;\
 		template< typename T > \
 		void operator( )( const T & t ) { that->static_function_return_type_inner< TAG, T, ARG ... >( t ); } \
-		static_function_return_type_delegate( NAME * that ) : that( that ) { }\
+		static_function_return_type_delegate( NAME * that ) : that( that ) { } \
 	};\
 	template< typename TAG, typename ... ARG > \
 	static_function_return_type_delegate< TAG, ARG ... > static_function_return_type( ... ) \
-	{ return static_function_return_type_delegate< TAG, ARG ... >( this ); }	\
+	{ return static_function_return_type_delegate< TAG, ARG ... >( this ); } \
+	template< typename TAG,  typename CPS, typename ... ARG > \
+	struct member_function_return_type_helper \
+	{ \
+		const CPS & k; \
+		template< typename T > \
+		void operator ( )( const tag< T > & ) const\
+		{	k( ::tag< typename ::member_function_return_type< T, TAG, ARG ... >::type >( ) ); } \
+		member_function_return_type_helper( const CPS & k ) : k( k ) { } \
+	}; \
 	template< typename TAG, typename K, typename ... ARG > \
 	void member_function_return_type_inner( const K & k ) \
-	{ \
-		BOOST_PP_SEQ_FOR_EACH( MEMBER_FUNCTION_RETURN_TYPE_HELPER, NAME, NAME_SEQ )	\
-		throw unable_to_determine_type( );\
-	} \
+	{ string_to_tag( any_typename, member_function_return_type_helper< TAG, K, ARG ... >( k ) ); } \
 	template< typename TAG, typename ... ARG > \
 	member_function_return_type_delegate< TAG, ARG ... > member_function_return_type( ... ) \
 	{ return member_function_return_type_delegate< TAG, ARG ... >( this ); }	\
