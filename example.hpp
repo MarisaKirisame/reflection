@@ -62,21 +62,21 @@ void example( )
 	invoke_all_member_variable( t, misc::make_expansion( []( tag< data >, int i ){ std::cout << i; }, [](...){} ) );
 	any_test tr( t );
 	auto ii = misc::make_expansion( [](int i){ std::cout << i << std::endl; }, [](...){ std::cout << "Hello World" << std::endl; } );
-	tr.get_member_variable< tag< data > >( ii );
-	tr.get_static_variable< tag< cache > >( ii );
-	assert( tr.has_member_variable< tag< data > >( ) );
-	assert( ! tr.has_member_variable< tag< cache > >( ) );
-	assert( tr.has_static_variable< tag< cache > >( ) );
-	tr.call_member_function< tag< func > >( 1, ii );
-	tr.call_static_function< tag< function > >( ii );
-	tr.call_member_function< tag< function > >( ii );
-	assert( ( ! tr.has_static_function< tag< func >, int >( ) ) );
-	assert( ( tr.has_member_function< tag< func >, int >( ) ) );
-	tr.member_variable_type< tag< data > >( misc::make_expansion( [](tag<int>){ std::cout << "Test pass" << std::endl; },[](...){} ) );
-	tr.static_variable_type< tag< cache > >( misc::make_expansion( [](tag<long>){ std::cout << "Test pass" << std::endl; },[](...){} ) );
-	tr.member_function_return_type< tag< func >, int >( )(
+	tr.get_member_variable( "data", ii );
+	tr.get_static_variable( "cache", ii );
+	assert( tr.has_member_variable( "data" ) );
+	assert( ! tr.has_member_variable( "cache" ) );
+	assert( tr.has_static_variable( "cache" ) );
+	tr.call_member_function( "func", 1, ii );
+	tr.call_static_function( "function", ii );
+	tr.call_member_function( "function", ii );
+	assert( ( ! tr.has_static_function< int >( "func" ) ) );
+	assert( ( tr.has_member_function< int >( "func" ) ) );
+	tr.member_variable_type( "data", misc::make_expansion( [](tag<int>){ std::cout << "Test pass" << std::endl; },[](...){} ) );
+	tr.static_variable_type( "cache", misc::make_expansion( [](tag<long>){ std::cout << "Test pass" << std::endl; },[](...){} ) );
+	tr.member_function_return_type< int >( "func" )(
 				misc::make_expansion( [](tag<double>){ std::cout << "Test pass" << std::endl; },[](...){} ) );
-	tr.static_function_return_type< tag< function > >( )(
+	tr.static_function_return_type( "function" )(
 				misc::make_expansion( [](tag<int>){ std::cout << "Test pass" << std::endl; },[](...){} ) );
 	object< any_test > ob;
 }

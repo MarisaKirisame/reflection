@@ -39,7 +39,8 @@
 				< \
 					TAG, \
 					::tag< ::NAME > \
-				>::value \
+				>::value && \
+				::has_static_variable< SELF, TAG >::value \
 			>::type, \
 			decltype( SELF::NAME ) \
 		>::type \

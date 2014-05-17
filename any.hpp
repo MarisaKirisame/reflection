@@ -8,40 +8,6 @@
 #include <static_variable.hpp>
 #include <member_function.hpp>
 #include <string_to_tag.hpp>
-#define HAS_STATIC_FUNCTION_HELPER( R, DATA, ELEMENT ) \
-	if ( any_typename == tag< ELEMENT >::name( ) ) \
-	{ \
-		return ::has_static_function< ELEMENT, TAG, ARG ... >::value; \
-	}
-#define HAS_MEMBER_FUNCTION_HELPER( R, DATA, ELEMENT ) \
-	if ( any_typename == tag< ELEMENT >::name( ) ) \
-	{ \
-		return ::has_member_function< ELEMENT, TAG, ARG ... >::value; \
-	}
-#define STATIC_VARIABLE_TYPE_HELPER( R, DATA, ELEMENT ) \
-	if ( any_typename == tag< ELEMENT >::name( ) ) \
-	{ \
-		k( tag< typename static_variable_type< ELEMENT, TAG >::type >( ) ); \
-		return; \
-	}
-#define MEMBER_VARIABLE_TYPE_HELPER( R, DATA, ELEMENT ) \
-if ( any_typename == tag< ELEMENT >::name( ) ) \
-	{ \
-		k( tag< typename member_variable_type< ELEMENT, TAG >::type >( ) ); \
-		return; \
-	}
-#define MEMBER_FUNCTION_RETURN_TYPE_HELPER( R, DATA, ELEMENT ) \
-if ( any_typename == tag< ELEMENT >::name( ) ) \
-{ \
-	k( ::tag< typename ::member_function_return_type< ELEMENT, TAG, ARG ... >::type >( ) ); \
-	return;\
-}
-#define STATIC_FUNCTION_RETURN_TYPE_HELPER( R, DATA, ELEMENT ) \
-if ( any_typename == tag< ELEMENT >::name( ) ) \
-{ \
-	k( ::tag< typename ::static_function_return_type< ELEMENT, TAG, ARG ... >::type >( ) ); \
-	return;\
-}
 #define DECLARE_ANY( NAME, NAME_SEQ ) \
 struct NAME \
 {	\
@@ -89,15 +55,27 @@ struct NAME \
 	struct get_member_variable_helper \
 	{ \
 		const CPS & k; \
-		NAME * that;\
+		const NAME * that;\
 		template< typename T > \
 		void operator ( )( const tag< T > & ) const\
 		{ k( member_variable< T, TAG >( )( static_cast< T * >( that->any_data->data ) ) ); } \
-		get_member_variable_helper( NAME * that, const CPS & k ) : k( k ), that( that ) { } \
+		get_member_variable_helper( const NAME * that, const CPS & k ) : k( k ), that( that ) { } \
 	}; \
 	template< typename TAG, typename CPS > \
-	void get_member_variable( CPS & k ) \
+	void get_member_variable( const CPS & k ) \
 	{ string_to_tag( any_typename, get_member_variable_helper< TAG, CPS >( this, k ) ); } \
+	template< typename CPS > \
+	struct get_member_variable_string_helper \
+	{ \
+		const CPS & k; \
+		NAME * that;\
+		get_member_variable_string_helper( NAME * that, const CPS & k ) : k( k ), that( that ) { }\
+		template< typename T > \
+		void operator ( )( const T & ) const { that->get_member_variable< T, CPS >( k ); }\
+	}; \
+	template< typename CPS > \
+	void get_member_variable( const std::string & tag, CPS & k ) \
+	{ string_to_tag( tag, get_member_variable_string_helper< CPS >( this, k ) ); } \
 	template< typename TAG > \
 	struct has_member_variable_helper \
 	{ \
@@ -114,6 +92,21 @@ struct NAME \
 		string_to_tag( any_typename, has_member_variable_helper< TAG >( ret ) ); \
 		return ret;\
 	} \
+	struct has_member_variable_string_helper \
+	{ \
+		bool & store_to; \
+		NAME * that; \
+		template< typename T > \
+		void operator ( )( const T & ) const\
+		{ store_to = that->has_member_variable< T >( ); } \
+		has_member_variable_string_helper( NAME * that, bool & store_to ) : store_to( store_to ), that( that ) { } \
+	}; \
+	bool has_member_variable( const std::string & tag ) \
+	{ \
+		bool ret; \
+		string_to_tag( tag, has_member_variable_string_helper( this, ret ) ); \
+		return ret;\
+	}	\
 	template< typename TAG > \
 	struct has_static_variable_helper \
 	{ \
@@ -130,20 +123,66 @@ struct NAME \
 		string_to_tag( any_typename, has_static_variable_helper< TAG >( ret ) ); \
 		return ret; \
 	} \
+	struct has_static_variable_string_helper \
+	{ \
+		bool & store_to; \
+		NAME * that; \
+		template< typename T > \
+		void operator ( )( const T & ) const\
+		{ store_to = that->has_static_variable< T >( ); } \
+		has_static_variable_string_helper( NAME * that, bool & store_to ) : store_to( store_to ), that( that ) { } \
+	}; \
+	bool has_static_variable( const std::string tag ) \
+	{ \
+		bool ret; \
+		string_to_tag( tag, has_static_variable_string_helper( this, ret ) ); \
+		return ret; \
+	} \
 	template< typename TAG, typename CPS > \
 	struct get_static_variable_helper \
 	{ \
 		const CPS & k; \
 		template< typename T > \
 		void operator ( )( const tag< T > & ) const  \
-		{ k( ::static_variable< T, TAG >( )( ) ); } \
+		{ k( static_variable< T, TAG >( )( ) ); } \
 		get_static_variable_helper( const CPS & k ) : k( k ) { } \
 	}; \
 	template< typename TAG, typename CPS > \
-	void get_static_variable( CPS & k ) \
+	void get_static_variable( const CPS & k ) \
 	{ string_to_tag( any_typename, get_static_variable_helper< TAG, CPS >( k ) ); } \
+	template< typename CPS > \
+	void get_static_variable( const std::string & tag, const CPS & k ) \
+	{ string_to_tag( tag, get_static_variable_string_helper< CPS >( this, k ) ); } \
+	template< typename CPS > \
+	struct get_static_variable_string_helper \
+	{ \
+		const CPS & k; \
+		NAME * that; \
+		get_static_variable_string_helper( NAME * that, const CPS & k ) : k( k ), that( that ) { } \
+		template< typename T > \
+		void operator ( )( const T & ) const  \
+		{ that->get_static_variable< T, CPS >( k ); } \
+	}; \
 	template< typename TAG, typename ... ARG > \
-	void call_member_function( const ARG & ... r ) { call_member_function_loop< TAG >( r ..., loop_tag( ) ); }\
+	void call_member_function( const ARG & ... r ) { call_member_function_loop< TAG >( r ..., loop_tag( ) ); } \
+	template< typename ... ARG > \
+	struct call_member_function_string_helper \
+	{ \
+		NAME * that; \
+		std::tuple< typename std::add_pointer< const ARG >::type ... > data; \
+		call_member_function_string_helper( NAME * that, const ARG & ... a ) : that( that ), data( std::addressof( a ) ... ) { } \
+		template< typename TAG > \
+		void operator ( )( const TAG & ) const { func< 0, TAG >( ); } \
+		template< int i, typename T, typename ... AARG > \
+		typename std::enable_if< i == std::tuple_size< decltype( data ) >::value >::type \
+		func( const AARG & ... a ) const { that->call_member_function< T, ARG ... >( a ... ); } \
+		template< int i, typename T, typename ... AARG > \
+		typename std::enable_if< i != std::tuple_size< decltype( data ) >::value >::type \
+		func( const AARG & ... a ) const { func< i + 1, T >( a ..., * std::get< i >( data ) ); } \
+	}; \
+	template< typename ... ARG > \
+	void call_member_function( const std::string & tag, const ARG & ... r ) \
+	{ string_to_tag( tag, call_member_function_string_helper< ARG ... >( this, r ... ) ); }\
 	template< typename TAG, typename T, typename ... ARG > \
 	void call_member_function_loop( const T & t, const ARG & ... r ) \
 	{ call_member_function_loop< TAG >( r ..., t ); } \
@@ -185,20 +224,38 @@ struct NAME \
 		}; \
 		NAME * that; \
 		const KK & k; \
-		std::tuple< AARG ... > data; \
-		call_member_function_delegate( NAME * that, const KK & k, const AARG & ... a ) : that( that ), k( k ), data( a ... ) { }\
+		std::tuple< typename std::add_pointer< const AARG >::type ... > data; \
+		call_member_function_delegate( NAME * that, const KK & k, const AARG & ... a ) : that( that ), k( k ), data( std::addressof( a ) ... ) { }\
 		template< int i, typename T, typename ... ARG > \
 		typename std::enable_if< i == std::tuple_size< decltype( data ) >::value >::type \
-		func( const ARG & ... a ) const { inner::function< T, TTAG, KK, AARG ... >( static_cast< T * >( that->any_data->data ), k, a ... ); } \
+		func( const ARG & ... a ) const { inner::template function< T, TTAG, KK, AARG ... >( static_cast< T * >( that->any_data->data ), k, a ... ); } \
 		template< int i, typename T, typename ... ARG > \
 		typename std::enable_if< i != std::tuple_size< decltype( data ) >::value >::type \
-		func( const ARG & ... a ) const { func< i + 1, T >( a ..., std::get< i >( data ) ); } \
+		func( const ARG & ... a ) const { func< i + 1, T >( a ..., * std::get< i >( data ) ); } \
 		template< typename T > \
 		void operator( )( const tag< T > & ) const\
 		{ func< 0, T >( ); } \
 	}; \
+	template< typename ... ARG > \
+	struct call_static_function_string_helper \
+	{ \
+		NAME * that; \
+		std::tuple< typename std::add_pointer< const ARG >::type ... > data; \
+		call_static_function_string_helper( NAME * that, const ARG & ... a ) : that( that ), data( std::addressof( a ) ... ) { } \
+		template< typename TAG > \
+		void operator ( )( const TAG & ) const { func< 0, TAG >( ); } \
+		template< int i, typename T, typename ... AARG > \
+		typename std::enable_if< i == std::tuple_size< decltype( data ) >::value >::type \
+		func( const AARG & ... a ) const { that->call_static_function< T, ARG ... >( a ... ); } \
+		template< int i, typename T, typename ... AARG > \
+		typename std::enable_if< i != std::tuple_size< decltype( data ) >::value >::type \
+		func( const AARG & ... a ) const { func< i + 1, T >( a ..., * std::get< i >( data ) ); } \
+	}; \
+	template< typename ... ARG > \
+	void call_static_function( const std::string & str, const ARG & ... r ) \
+	{ string_to_tag( str, call_static_function_string_helper< ARG ... >( this, r ... ) ); } \
 	template< typename TAG, typename ... ARG > \
-	void call_static_function( const ARG & ... r ) { call_static_function_loop< TAG >( r ..., loop_tag( ) ); }\
+	void call_static_function( const ARG & ... r ) { call_static_function_loop< TAG >( r ..., loop_tag( ) ); } \
 	template< typename TAG, typename T, typename ... ARG > \
 	void call_static_function_loop( const T & t, const ARG & ... r ) \
 	{ call_static_function_loop< TAG >( r ..., t ); } \
@@ -239,17 +296,17 @@ struct NAME \
 			static void function( const K & k, ... ) { k( no_existence( ) ); } \
 		}; \
 		const KK & k; \
-		std::tuple< AARG ... > data; \
+		std::tuple< typename std::add_pointer< const AARG >::type ... > data; \
 		template< int i, typename T, typename ... ARG > \
 		typename std::enable_if< i == std::tuple_size< decltype( data ) >::value >::type \
-		func( const ARG & ... a ) const { inner::function< T, TTAG, KK, AARG ... >( k, a ... ); } \
+		func( const ARG & ... a ) const { inner::template function< T, TTAG, KK, AARG ... >( k, a ... ); } \
 		template< int i, typename T, typename ... ARG > \
 		typename std::enable_if< i != std::tuple_size< decltype( data ) >::value >::type \
-		func( const ARG & ... a ) const { func< i + 1, T >( a ..., std::get< i >( data ) ); } \
+		func( const ARG & ... a ) const { func< i + 1, T >( a ..., * std::get< i >( data ) ); } \
 		template< typename T > \
-		void operator( )( const tag< T > & ) const\
+		void operator( )( const tag< T > & ) const \
 		{ func< 0, T >( ); } \
-		call_static_function_delegate( const KK & k, const AARG & ... a ) : k( k ), data( a ... ) { } \
+		call_static_function_delegate( const KK & k, const AARG & ... a ) : k( k ), data( std::addressof( a ) ... ) { } \
 	}; \
 	template< typename TAG, typename ... ARG > \
 	struct has_static_function_helper \
@@ -260,6 +317,16 @@ struct NAME \
 		{ store_to = ::has_static_function< T, TAG, ARG ... >::value; } \
 		has_static_function_helper( bool & store_to ) : store_to( store_to ) { } \
 	}; \
+	template< typename ... ARG > \
+	struct has_static_function_string_helper \
+	{ \
+		bool & store_to; \
+		NAME * that; \
+		template< typename T > \
+		void operator ( )( const T & ) const\
+		{ store_to = that->has_static_function< T, ARG ... >( ); } \
+		has_static_function_string_helper( NAME * that, bool & store_to ) : store_to( store_to ), that( that ) { } \
+	}; \
 	template< typename TAG, typename ... ARG > \
 	bool has_static_function( ) \
 	{ \
@@ -267,6 +334,23 @@ struct NAME \
 		string_to_tag( any_typename, has_static_function_helper< TAG, ARG ... >( ret ) ); \
 		return ret; \
 	} \
+	template< typename ... ARG > \
+	bool has_static_function( const std::string & tag ) \
+	{ \
+		bool ret; \
+		string_to_tag( tag, has_static_function_string_helper< ARG ... >( this, ret ) ); \
+		return ret; \
+	} \
+	template< typename ... ARG > \
+	struct has_member_function_string_helper \
+	{ \
+		bool & store_to; \
+		NAME * that; \
+		template< typename T > \
+		void operator ( )( const T & ) const\
+		{ store_to = that->has_member_function< T, ARG ... >( ); } \
+		has_member_function_string_helper( NAME * that, bool & store_to ) : store_to( store_to ), that( that ) { } \
+	}; \
 	template< typename TAG, typename ... ARG > \
 	struct has_member_function_helper \
 	{ \
@@ -283,6 +367,13 @@ struct NAME \
 		string_to_tag( any_typename, has_member_function_helper< TAG, ARG ... >( ret ) ); \
 		return ret; \
 	} \
+	template< typename ... ARG > \
+	bool has_member_function( const std::string & tag ) \
+	{ \
+		bool ret; \
+		string_to_tag( tag, has_member_function_string_helper< ARG ... >( this, ret ) ); \
+		return ret; \
+	} \
 	template< typename TAG,  typename CPS > \
 	struct member_variable_type_helper \
 	{ \
@@ -292,6 +383,18 @@ struct NAME \
 		{	k( tag< typename ::member_variable_type< T, TAG >::type >( ) ); } \
 		member_variable_type_helper( const CPS & k ) : k( k ) { } \
 	}; \
+	template< typename CPS > \
+	struct member_variable_type_string_helper \
+	{ \
+		const CPS & k; \
+		NAME * that;\
+		member_variable_type_string_helper( NAME * that, const CPS & k ) : k( k ), that( that ) { }\
+		template< typename T > \
+		void operator ( )( const T & ) const { that->member_variable_type< T, CPS >( k ); }\
+	}; \
+	template< typename K > \
+	void member_variable_type( const std::string & tag, const K & k ) \
+	{ string_to_tag( tag, member_variable_type_string_helper< K >( this, k ) ); } \
 	template< typename TAG, typename K > \
 	void member_variable_type( const K & k ) \
 	{ string_to_tag( any_typename, member_variable_type_helper< TAG, K >( k ) ); } \
@@ -304,6 +407,18 @@ struct NAME \
 		{	k( tag< typename ::static_variable_type< T, TAG >::type >( ) ); } \
 		static_variable_type_helper( const CPS & k ) : k( k ) { } \
 	}; \
+	template< typename CPS > \
+	struct static_variable_type_string_helper \
+	{ \
+		const CPS & k; \
+		NAME * that;\
+		static_variable_type_string_helper( NAME * that, const CPS & k ) : k( k ), that( that ) { }\
+		template< typename T > \
+		void operator ( )( const T & ) const { that->static_variable_type< T, CPS >( k ); }\
+	}; \
+	template< typename K > \
+	void static_variable_type( const std::string & tag, const K & k ) \
+	{ string_to_tag( tag, static_variable_type_string_helper< K >( this, k ) ); } \
 	template< typename TAG, typename K > \
 	void static_variable_type( const K & k ) \
 	{ string_to_tag( any_typename, static_variable_type_helper< TAG, K >( k ) ); } \
@@ -334,10 +449,31 @@ struct NAME \
 		template< typename T > \
 		void operator( )( const T & t ) { that->static_function_return_type_inner< TAG, T, ARG ... >( t ); } \
 		static_function_return_type_delegate( NAME * that ) : that( that ) { } \
-	};\
+	}; \
+	template< typename ... ARG > \
+	struct static_function_return_type_string_delegate \
+	{ \
+		NAME * that; \
+		std::string tag; \
+		template< typename T > \
+		struct inner \
+		{	\
+			NAME * that; \
+			const T & t; \
+			template< typename TAG > \
+			void operator( )( const TAG & ) const { that->static_function_return_type_inner< TAG, T, ARG ... >( t ); }  \
+			inner( NAME * that, const T & t ) : that( that ), t( t ) { } \
+		}; \
+		template< typename T > \
+		void operator( )( const T & t ) { string_to_tag( tag, inner< T >( that, t ) ); } \
+		static_function_return_type_string_delegate( NAME * that, const std::string & tag ) : that( that ), tag( tag ) { } \
+	}; \
 	template< typename TAG, typename ... ARG > \
-	static_function_return_type_delegate< TAG, ARG ... > static_function_return_type( ... ) \
+	static_function_return_type_delegate< TAG, ARG ... > static_function_return_type( ) \
 	{ return static_function_return_type_delegate< TAG, ARG ... >( this ); } \
+	template< typename ... ARG > \
+	static_function_return_type_string_delegate< ARG ... > static_function_return_type( const std::string & tag ) \
+	{ return static_function_return_type_string_delegate< ARG ... >( this, tag ); } \
 	template< typename TAG,  typename CPS, typename ... ARG > \
 	struct member_function_return_type_helper \
 	{ \
@@ -347,11 +483,32 @@ struct NAME \
 		{	k( ::tag< typename ::member_function_return_type< T, TAG, ARG ... >::type >( ) ); } \
 		member_function_return_type_helper( const CPS & k ) : k( k ) { } \
 	}; \
+	template< typename ... ARG > \
+	struct member_function_return_type_string_delegate \
+	{ \
+		NAME * that; \
+		std::string tag; \
+		template< typename T > \
+		struct inner \
+		{	\
+			NAME * that; \
+			const T & t; \
+			template< typename TAG > \
+			void operator( )( const TAG & ) const { that->member_function_return_type_inner< TAG, T, ARG ... >( t ); } \
+			inner( NAME * that, const T & t ) : that( that ), t( t ) { } \
+		}; \
+		template< typename T > \
+		void operator( )( const T & t ) const { string_to_tag( tag, inner< T >( that, t ) ); } \
+		member_function_return_type_string_delegate( NAME * that, const std::string & tag ) : that( that ), tag( tag ) { } \
+	}; \
 	template< typename TAG, typename K, typename ... ARG > \
 	void member_function_return_type_inner( const K & k ) \
 	{ string_to_tag( any_typename, member_function_return_type_helper< TAG, K, ARG ... >( k ) ); } \
 	template< typename TAG, typename ... ARG > \
-	member_function_return_type_delegate< TAG, ARG ... > member_function_return_type( ... ) \
-	{ return member_function_return_type_delegate< TAG, ARG ... >( this ); }	\
+	member_function_return_type_delegate< TAG, ARG ... > member_function_return_type( ) \
+	{ return member_function_return_type_delegate< TAG, ARG ... >( this ); } \
+	template< typename ... ARG > \
+	member_function_return_type_string_delegate< ARG ... > member_function_return_type( const std::string & tag ) \
+	{ return member_function_return_type_string_delegate< ARG ... >( this, tag ); } \
 };
 #endif // ANY_HPP
