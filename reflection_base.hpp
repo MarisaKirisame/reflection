@@ -9,20 +9,6 @@
 template< typename CRTP >
 struct reflection_base
 {
-	template< typename TAG, typename CPS >
-	void get_member_variable( const CPS & k )
-	{ k( ::member_variable< TAG, CPS >( )( this ) ); }
-	template< typename TAG, typename CPS >
-	void get_static_variable( const CPS & k )
-	{ k( ::static_variable< TAG, CPS >( )( ) ); }
-	template< typename TAG >
-	constexpr bool has_member_variable( ) const { return ::has_member_variable< CRTP, TAG >::value; }
-	template< typename TAG >
-	constexpr bool has_static_variable( ) const { return ::has_static_variable< CRTP, TAG >::value; }
-	template< typename TAG, typename ... ARG >
-	constexpr bool has_member_function( ) const { return ::has_member_function< CRTP, TAG, ARG ... >::value; }
-	template< typename TAG, typename ... ARG >
-	constexpr bool has_static_function( ) const { return ::has_static_function< CRTP, TAG, ARG ... >::value; }
 	template< typename TAG,  typename CPS >
 	struct static_variable_type_helper
 	{
@@ -110,9 +96,9 @@ struct reflection_base
 		const CPS & k;
 		const CRTP * that;
 		get_static_variable_string_helper( const CRTP * that, const CPS & k ) : k( k ), that( that ) { }
-		template< typename T >
-		void operator ( )( const T & ) const
-		{ that->get_static_variable< T, CPS >( k ); }
+		template< typename TAG >
+		void operator ( )( const TAG & ) const
+		{ that->template get_static_variable< TAG, CPS >( k ); }
 	};
 	template< typename ... ARG >
 	struct call_static_function_string_helper
@@ -158,7 +144,7 @@ struct reflection_base
 		CRTP * that;
 		get_member_variable_string_helper( CRTP * that, const CPS & k ) : k( k ), that( that ) { }
 		template< typename T >
-		void operator ( )( const T & ) const { that->get_member_variable< T, CPS >( k ); }
+		void operator ( )( const T & ) const { that->template get_member_variable< T, CPS >( k ); }
 	};
 	template< typename CPS >
 	void get_member_variable( const std::string & tag, CPS & k )
@@ -170,7 +156,7 @@ struct reflection_base
 		const CRTP * that;
 		static_variable_type_string_helper( const CRTP * that, const CPS & k ) : k( k ), that( that ) { }
 		template< typename T >
-		void operator ( )( const T & ) const { that->static_variable_type< T, CPS >( k ); }
+		void operator ( )( const T & ) const { that->template static_variable_type< T, CPS >( k ); }
 	};
 	template< typename K >
 	void static_variable_type( const std::string & tag, const K & k ) const
@@ -186,7 +172,7 @@ struct reflection_base
 			const CRTP * that;
 			const T & t;
 			template< typename TAG >
-			void operator( )( const TAG & ) const { that->template static_function_return_type_inner< TAG, T, ARG ... >( t ); }
+			void operator( )( const TAG & ) const { that->template static_function_return_type< TAG, ARG ... >( )( t ); }
 			inner( const CRTP * that, const T & t ) : that( that ), t( t ) { }
 		};
 		template< typename T >
@@ -201,14 +187,14 @@ struct reflection_base
 	{
 		const CRTP * that;
 		std::string tag;
-		template< typename T >
+		template< typename K >
 		struct inner
 		{
 			const CRTP * that;
-			const T & t;
+			const K & t;
 			template< typename TAG >
-			void operator( )( const TAG & ) const { that->template member_function_return_type_inner< TAG, T, ARG ... >( t ); }
-			inner( const CRTP * that, const T & t ) : that( that ), t( t ) { }
+			void operator( )( const TAG & ) const { that->template member_function_return_type< TAG, ARG ... >( )( t ); }
+			inner( const CRTP * that, const K & t ) : that( that ), t( t ) { }
 		};
 		template< typename T >
 		void operator( )( const T & t ) const { string_to_tag( tag, inner< T >( that, t ) ); }
@@ -287,7 +273,7 @@ struct reflection_base
 	typename std::enable_if
 	<
 		std::is_same< typename static_function_return_type< CRTP, TAG, ARG ... >::type, void >::value &&
-		::has_member_function< CRTP, TAG, ARG ... >::value
+		::has_static_function< CRTP, TAG, ARG ... >::value
 	>::type call_static_function_inner( const K & k, const ARG & ... arg ) const
 	{
 		::call_static_function< CRTP, TAG, ARG ... >( )( arg ... );
@@ -297,27 +283,49 @@ struct reflection_base
 	typename std::enable_if
 	<
 		( ! std::is_same< typename static_function_return_type< CRTP, TAG, ARG ... >::type, void >::value ) &&
-		::has_member_function< CRTP, TAG, ARG ... >::value
+		::has_static_function< CRTP, TAG, ARG ... >::value
 	>::type call_static_function_inner( const K & k, const ARG & ... arg ) const
 	{ k( ::call_static_function< CRTP, TAG, ARG ... >( )( arg ... ) ); }
-	template< typename TAG, typename ... ARG >
-	struct static_function_return_type_delegate
-	{
-		template< typename K >
-		void operator( )( const K & k ) { k( tag< typename ::static_function_return_type< CRTP, TAG, ARG ... >::type >( ) ); }
-	};
-	template< typename TAG, typename ... ARG >
-	static_function_return_type_delegate< TAG, ARG ... > static_function_return_type( ) const
-	{ return static_function_return_type_delegate< TAG, ARG ... >( this ); }
+	template< typename TAG, typename K, typename ... ARG >
+	typename std::enable_if< ! ::has_static_function< CRTP, TAG, ARG ... >::value >::type
+	call_static_function_inner( const K & k, ... ) const
+	{ k( no_existence( ) ); }
+	template< typename TAG, typename K, typename ... ARG >
+	typename std::enable_if< ! ::has_member_function< CRTP, TAG, ARG ... >::value >::type
+	call_member_function_inner( const K & k, ... ) const
+	{ k( no_existence( ) ); }
 	template< typename TAG, typename ... ARG >
 	struct member_function_return_type_delegate
 	{
 		template< typename K >
-		void operator( )( const K & k ) { k( tag< typename ::member_function_return_type< CRTP, TAG, ARG ... >::type >( ) ); }
+		void operator( )( const K & k ) const { k( tag< typename ::member_function_return_type< CRTP, TAG, ARG ... >::type >( ) ); }
 	};
 	template< typename TAG, typename ... ARG >
 	member_function_return_type_delegate< TAG, ARG ... > member_function_return_type( ) const
-	{ return member_function_return_type_delegate< TAG, ARG ... >( this ); }
+	{ return member_function_return_type_delegate< TAG, ARG ... >( ); }
+	template< typename TAG, typename ... ARG >
+	struct static_function_return_type_delegate
+	{
+		template< typename K >
+		void operator( )( const K & k ) const { k( tag< typename ::static_function_return_type< CRTP, TAG, ARG ... >::type >( ) ); }
+	};
+	template< typename TAG, typename ... ARG >
+	static_function_return_type_delegate< TAG, ARG ... > static_function_return_type( ) const
+	{ return static_function_return_type_delegate< TAG, ARG ... >( ); }
 	virtual ~reflection_base( ) { }
+	template< typename TAG, typename CPS >
+	void get_member_variable( const CPS & k )
+	{ k( ::member_variable< CRTP, TAG >( )( static_cast< CRTP * >( this ) ) ); }
+	template< typename TAG, typename CPS >
+	void get_static_variable( const CPS & k ) const
+	{ k( ::static_variable< CRTP, TAG >( )( ) ); }
+	template< typename TAG >
+	constexpr bool has_member_variable( ) const { return ::has_member_variable< CRTP, TAG >::value; }
+	template< typename TAG >
+	constexpr bool has_static_variable( ) const { return ::has_static_variable< CRTP, TAG >::value; }
+	template< typename TAG, typename ... ARG >
+	constexpr bool has_member_function( ) const { return ::has_member_function< CRTP, TAG, ARG ... >::value; }
+	template< typename TAG, typename ... ARG >
+	constexpr bool has_static_function( ) const { return ::has_static_function< CRTP, TAG, ARG ... >::value; }
 };
 #endif // REFLECTION_BASE_HPP

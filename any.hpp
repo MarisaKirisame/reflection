@@ -240,7 +240,7 @@ struct NAME : reflection_base< NAME > \
 		has_static_function_helper( bool & store_to ) : store_to( store_to ) { } \
 	}; \
 	template< typename TAG, typename ... ARG > \
-	bool has_static_function( ) \
+	bool has_static_function( ) const \
 	{ \
 		bool ret; \
 		string_to_tag( any_typename, has_static_function_helper< TAG, ARG ... >( ret ) ); \
@@ -330,7 +330,7 @@ struct NAME : reflection_base< NAME > \
 	void member_function_return_type_inner( const K & k ) const \
 	{ string_to_tag( any_typename, member_function_return_type_helper< TAG, K, ARG ... >( k ) ); } \
 	template< typename TAG, typename ... ARG > \
-	member_function_return_type_delegate< TAG, ARG ... > member_function_return_type( ) \
+	member_function_return_type_delegate< TAG, ARG ... > member_function_return_type( ) const \
 	{ return member_function_return_type_delegate< TAG, ARG ... >( this ); } \
 };
 #endif // ANY_HPP
