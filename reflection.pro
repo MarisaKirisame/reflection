@@ -18,5 +18,6 @@ HEADERS += \
     any.hpp \
     object.hpp \
     has_class.hpp \
-    string_to_tag.hpp
+    string_to_tag.hpp \
+    reflection_base.hpp
 
