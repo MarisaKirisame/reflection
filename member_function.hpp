@@ -24,17 +24,6 @@
 			>::type \
 		>::type ) \
 	{ return true; } \
-	template< typename SELF, typename TAG, typename ... ARG > \
-	typename std::enable_if \
-	< \
-		std::is_same \
-		< \
-			TAG, \
-			::tag< NAME > \
-		>::value, \
-		decltype( std::declval< SELF * >( )->NAME( std::declval< ARG >( ) ... ) ) \
-	>::type \
-	call_member_function( const ARG & ...  r ) { return NAME( r ... ); } \
 	template< typename SELF, typename T, typename ... R > \
 	static typename std::enable_if \
 	< \
@@ -45,7 +34,18 @@
 		>::value, \
 		decltype( std::declval< SELF * >( )->NAME( std::declval< R >( ) ... ) ) \
 	>::type \
-	call_member_function( const SELF & t, const R & ...  r ) { return t.NAME( r ... ); }
+	call_member_function( SELF & t, const R & ...  r ) { return t.NAME( r ... ); } \
+	template< typename SELF, typename T, typename ... R > \
+	static typename std::enable_if \
+	< \
+		std::is_same \
+		< \
+			T, \
+			::tag< NAME > \
+		>::value, \
+		decltype( std::declval< SELF * >( )->NAME( std::declval< R >( ) ... ) ) \
+	>::type \
+call_member_function( const SELF & t, const R & ...  r ) { return t.NAME( r ... ); }
 template< typename TYPE, typename TTAG, typename ... AARG >
 struct has_member_function
 {
@@ -115,14 +115,25 @@ struct call_member_function
 				TYPE,
 				TAG
 			>( std::declval< typename std::remove_reference< decltype( std::declval< TYPE >( ) ) >::type >( ), std::declval< ARG >( ) ... ) )
-	operator ( )( const TYPE & t, const ARG & ... r )
+	operator ( )( TYPE & t, const ARG & ... r ) const
+	{ return helper< TYPE >::template call_member_function< TYPE, TAG, ARG ... >( t, r ... ); }
+	decltype(
+			helper< TYPE >::template call_member_function
+			<
+				TYPE,
+				TAG
+			>( std::declval< typename std::remove_reference< decltype( std::declval< TYPE >( ) ) >::type >( ), std::declval< ARG >( ) ... ) )
+	operator ( )( const TYPE & t, const ARG & ... r ) const
 	{ return helper< TYPE >::template call_member_function< TYPE, TAG, ARG ... >( t, r ... ); }
 };
 template< typename TYPE, typename TAG >
 struct call_member_function< TYPE, TAG, void >
 {
 	decltype( helper< TYPE >::template call_member_function< TYPE, TAG >( ) )
-	operator ( )( const TYPE & t )
+	operator ( )( const TYPE & t ) const
+	{ return helper< TYPE >::template call_member_function< TYPE, TAG >( t ); }
+	decltype( helper< TYPE >::template call_member_function< TYPE, TAG >( ) )
+	operator ( )( TYPE & t ) const
 	{ return helper< TYPE >::template call_member_function< TYPE, TAG >( t ); }
 };
 #define DECLARE_ALL_POSSIBLE_MEMBER_FUNCTION_HELPER( R, DATA, ELEMENT ) DECLARE_POSSIBLE_MEMBER_FUNCTION( ELEMENT )

@@ -7,11 +7,11 @@
 #include "object.hpp"
 #define EXAMPLE_NAME_SEQ (data)(cache)(func)(function)(foo)(bar)(test)
 DECLARE_NAMES( EXAMPLE_NAME_SEQ )
-struct test
+struct test : reflection_base< test >
 {
 	int data = 12450;
-	double func( int ) const { return 10; }
-	double func( int, int ) const { return 10; }
+	double func( int ) { return 10; }
+	double func( int, int ) { return 10; }
 	static int function( ) { return 1; }
 	static long cache;
 	static decltype( & function ) bar( long, long time ) { if ( time == 0 ) { } return & function; }
