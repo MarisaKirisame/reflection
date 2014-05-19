@@ -119,7 +119,7 @@ struct NAME : reflection_base< NAME > \
 		get_static_variable_helper( const CPS & k ) : k( k ) { } \
 	}; \
 	template< typename TAG, typename CPS > \
-	void get_static_variable( const CPS & k ) \
+	void get_static_variable( const CPS & k ) const \
 	{ string_to_tag( any_typename, get_static_variable_helper< TAG, CPS >( k ) ); } \
 	template< typename TAG, typename ... ARG > \
 	void call_member_function( const ARG & ... r ) { call_member_function_loop< TAG >( r ..., loop_tag( ) ); } \
@@ -177,15 +177,15 @@ struct NAME : reflection_base< NAME > \
 		{ func< 0, T >( ); } \
 	}; \
 	template< typename TAG, typename ... ARG > \
-	void call_static_function( const ARG & ... r ) { call_static_function_loop< TAG >( r ..., loop_tag( ) ); } \
+	void call_static_function( const ARG & ... r ) const { call_static_function_loop< TAG >( r ..., loop_tag( ) ); } \
 	template< typename TAG, typename T, typename ... ARG > \
-	void call_static_function_loop( const T & t, const ARG & ... r ) \
+	void call_static_function_loop( const T & t, const ARG & ... r ) const \
 	{ call_static_function_loop< TAG >( r ..., t ); } \
 	template< typename TAG, typename T, typename ... ARG > \
-	void call_static_function_loop( const T & t, loop_tag, const ARG & ... r ) \
+	void call_static_function_loop( const T & t, loop_tag, const ARG & ... r ) const \
 	{ call_static_function_inner< TAG >( t, r ... ); } \
 	template< typename TAG, typename K, typename ... ARG > \
-	void call_static_function_inner( const K & k, const ARG & ... arg ) \
+	void call_static_function_inner( const K & k, const ARG & ... arg ) const \
 	{ string_to_tag( any_typename, call_static_function_delegate< TAG, K, ARG ... >( k, arg ... ) );	} \
 	template< typename TTAG, typename KK, typename ... AARG > \
 	struct call_static_function_delegate \
@@ -272,7 +272,7 @@ struct NAME : reflection_base< NAME > \
 		member_variable_type_helper( const CPS & k ) : k( k ) { } \
 	}; \
 	template< typename TAG, typename K > \
-	void member_variable_type( const K & k ) \
+	void member_variable_type( const K & k ) const \
 	{ string_to_tag( any_typename, member_variable_type_helper< TAG, K >( k ) ); } \
 	template< typename TAG,  typename CPS > \
 	struct static_variable_type_helper \

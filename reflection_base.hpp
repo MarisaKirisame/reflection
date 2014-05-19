@@ -84,8 +84,8 @@ struct reflection_base
 	struct get_static_variable_string_helper
 	{
 		const CPS & k;
-		CRTP * that;
-		get_static_variable_string_helper( CRTP * that, const CPS & k ) : k( k ), that( that ) { }
+		const CRTP * that;
+		get_static_variable_string_helper( const CRTP * that, const CPS & k ) : k( k ), that( that ) { }
 		template< typename T >
 		void operator ( )( const T & ) const
 		{ that->get_static_variable< T, CPS >( k ); }
@@ -93,9 +93,9 @@ struct reflection_base
 	template< typename ... ARG >
 	struct call_static_function_string_helper
 	{
-		CRTP * that;
+		const CRTP * that;
 		std::tuple< typename std::add_pointer< const ARG >::type ... > data;
-		call_static_function_string_helper( CRTP * that, const ARG & ... a ) : that( that ), data( std::addressof( a ) ... ) { }
+		call_static_function_string_helper( const CRTP * that, const ARG & ... a ) : that( that ), data( std::addressof( a ) ... ) { }
 		template< typename TAG >
 		void operator ( )( const TAG & ) const { func< 0, TAG >( ); }
 		template< int i, typename T, typename ... AARG >
@@ -106,11 +106,11 @@ struct reflection_base
 		func( const AARG & ... a ) const { func< i + 1, T >( a ..., * std::get< i >( data ) ); }
 	};
 	template< typename ... ARG >
-	void call_static_function( const std::string & str, const ARG & ... r )
-	{ string_to_tag( str, call_static_function_string_helper< ARG ... >( static_cast< CRTP * >( this ), r ... ) ); }
+	void call_static_function( const std::string & str, const ARG & ... r ) const
+	{ string_to_tag( str, call_static_function_string_helper< ARG ... >( static_cast< const CRTP * >( this ), r ... ) ); }
 	template< typename CPS >
-	void get_static_variable( const std::string & tag, const CPS & k )
-	{ string_to_tag( tag, get_static_variable_string_helper< CPS >( static_cast< CRTP * >( this ), k ) ); }
+	void get_static_variable( const std::string & tag, const CPS & k ) const
+	{ string_to_tag( tag, get_static_variable_string_helper< CPS >( static_cast< const CRTP * >( this ), k ) ); }
 	template< typename TAG, typename ... ARG >
 	struct has_member_function_helper
 	{
@@ -211,18 +211,18 @@ struct reflection_base
 		typename std::enable_if< i != std::tuple_size< decltype( data ) >::value >::type
 		func( const AARG & ... a ) const { func< i + 1, T >( a ..., * std::get< i >( data ) ); }
 	};
-	template< typename CPS > \
-	struct member_variable_type_string_helper \
+	template< typename CPS >
+	struct member_variable_type_string_helper
 	{
-		const CPS & k; \
-		CRTP * that;\
-		member_variable_type_string_helper( CRTP * that, const CPS & k ) : k( k ), that( that ) { }\
-		template< typename T > \
-		void operator ( )( const T & ) const { that->template member_variable_type< T, CPS >( k ); }\
+		const CPS & k;
+		const CRTP * that;
+		member_variable_type_string_helper( const CRTP * that, const CPS & k ) : k( k ), that( that ) { }
+		template< typename T >
+		void operator ( )( const T & ) const { that->template member_variable_type< T, CPS >( k ); }
 	};
 	template< typename K >
-	void member_variable_type( const std::string & tag, const K & k )
-	{ string_to_tag( tag, member_variable_type_string_helper< K >( static_cast< CRTP * >( this ), k ) ); }
+	void member_variable_type( const std::string & tag, const K & k ) const
+	{ string_to_tag( tag, member_variable_type_string_helper< K >( static_cast< const CRTP * >( this ), k ) ); }
 	virtual ~reflection_base( ) { }
 };
 #endif // REFLECTION_BASE_HPP
