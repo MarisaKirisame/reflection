@@ -3,9 +3,7 @@
 #include <string>
 #include <map>
 struct unable_to_determine_type : std::runtime_error
-{
-	unable_to_determine_type( ) : std::runtime_error( "Unable to determine the type." ) { }
-};
+{ unable_to_determine_type( ) : std::runtime_error( "Unable to determine the type." ) { } };
 #define STRING_TO_TAG_HELPER( R, DATA, ELEMENT ) \
 	if ( str == tag< ELEMENT >::name( ) ) \
 	{ \

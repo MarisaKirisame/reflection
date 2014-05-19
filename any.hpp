@@ -268,7 +268,7 @@ struct NAME : reflection_base< NAME > \
 		const CPS & k; \
 		template< typename T > \
 		void operator ( )( const tag< T > & ) const\
-		{	k( tag< typename ::member_variable_type_inner< T, TAG >::type >( ) ); } \
+		{	k( tag< typename ::member_variable_type< T, TAG >::type >( ) ); } \
 		member_variable_type_helper( const CPS & k ) : k( k ) { } \
 	}; \
 	template< typename TAG, typename K > \
@@ -292,7 +292,7 @@ struct NAME : reflection_base< NAME > \
 		NAME * that; \
 		template< typename T > \
 		void operator( )( const T & t ) { that->member_function_return_type_inner< TAG, T, ARG ... >( t ); } \
-		member_function_return_type_delegate( NAME * that ) : that( that ) { }\
+		member_function_return_type_delegate( NAME * that ) : that( that ) { } \
 	}; \
 	template< typename TAG,  typename CPS, typename ... ARG > \
 	struct static_function_return_type_helper \

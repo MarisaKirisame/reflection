@@ -98,7 +98,7 @@ struct has_member_variable
 	constexpr static bool value = function< TYPE, TAG >( nullptr );
 };
 template< typename TYPE, typename TAG >
-struct member_variable_type_inner
+struct member_variable_type
 {
 	template< typename TTYPE, typename TTAG >
 	static decltype( helper< TTYPE >::template member_variable_type< TTYPE, TTAG >( ) ) function( void * );

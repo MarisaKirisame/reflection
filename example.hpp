@@ -48,7 +48,7 @@ static_assert(
 static_assert( has_class< test >::value, "" );
 static_assert( has_member_variable< test, tag< data > >::value, "" );
 static_assert( ! has_member_variable< test, tag< cache > >::value, "" );
-static_assert( std::is_same< member_variable_type_inner< test, tag< data > >::type, int >::value, "" );
+static_assert( std::is_same< member_variable_type< test, tag< data > >::type, int >::value, "" );
 #include <iostream>
 template< typename T, typename K >
 void invoke_all_member_variable( T & t, const K & k )
