@@ -5,7 +5,7 @@
 #include "any.hpp"
 #include "../misc/misc.hpp"
 #include "object.hpp"
-#define EXAMPLE_NAME_SEQ (data)(cache)(func)(function)(foo)(bar)(test)
+#define EXAMPLE_NAME_SEQ (data)(cache)(func)(function)(foo)(bar)(test)(any_test)
 DECLARE_NAMES( EXAMPLE_NAME_SEQ )
 struct test : reflection_base< test >
 {
@@ -94,5 +94,8 @@ void example( )
 	t.static_function_return_type( "function" )(
 				misc::make_expansion( [](tag<int>){ std::cout << "Test pass" << std::endl; },[](...){} ) );
 	object< any_test > ob;
+	ob.add_member_variable( "mem", tr );
+	assert( ob.has_member_variable( "mem" ) );
+	assert( ! ob.has_member_variable( "noexist" ) );
 }
 #endif //EXAMPLE_HPP
