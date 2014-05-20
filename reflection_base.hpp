@@ -297,21 +297,29 @@ struct reflection_base
 	template< typename TAG, typename ... ARG >
 	struct member_function_return_type_delegate
 	{
+		const CRTP * that;
 		template< typename K >
-		void operator( )( const K & k ) const { k( tag< typename ::member_function_return_type< CRTP, TAG, ARG ... >::type >( ) ); }
+		void operator( )( const K & k ) const { that->template member_function_return_type_inner< TAG, K, ARG ... >( k ); }
+		member_function_return_type_delegate( const CRTP * that ) : that( that ) { }
 	};
 	template< typename TAG, typename ... ARG >
 	member_function_return_type_delegate< TAG, ARG ... > member_function_return_type( ) const
-	{ return member_function_return_type_delegate< TAG, ARG ... >( ); }
+	{ return member_function_return_type_delegate< TAG, ARG ... >( static_cast< const CRTP * >( this ) ); }
+	template< typename TAG, typename K, typename ... ARG >
+	void member_function_return_type_inner( const K & k ) const { k( tag< typename ::member_function_return_type< CRTP, TAG, ARG ... >::type >( ) ); }
+	template< typename TAG, typename K, typename ... ARG >
+	void static_function_return_type_inner( const K & k ) const { k( tag< typename ::static_function_return_type< CRTP, TAG, ARG ... >::type >( ) ); }
 	template< typename TAG, typename ... ARG >
 	struct static_function_return_type_delegate
 	{
+		const CRTP * that;
 		template< typename K >
-		void operator( )( const K & k ) const { k( tag< typename ::static_function_return_type< CRTP, TAG, ARG ... >::type >( ) ); }
+		void operator( )( const K & k ) const { that->template static_function_return_type_inner< TAG, K, ARG ... >( k ); }
+		static_function_return_type_delegate( const CRTP * that ) : that( that ) { }
 	};
 	template< typename TAG, typename ... ARG >
 	static_function_return_type_delegate< TAG, ARG ... > static_function_return_type( ) const
-	{ return static_function_return_type_delegate< TAG, ARG ... >( ); }
+	{ return static_function_return_type_delegate< TAG, ARG ... >( static_cast< const CRTP * >( this ) ); }
 	virtual ~reflection_base( ) { }
 	template< typename TAG, typename CPS >
 	void get_member_variable( const CPS & k )

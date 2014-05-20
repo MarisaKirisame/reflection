@@ -85,10 +85,10 @@ void example( )
 	t.member_variable_type( "data", misc::make_expansion( [](tag<int>){ std::cout << "Test pass" << std::endl; },[](...){} ) );
 	tr.static_variable_type( "cache", misc::make_expansion( [](tag<long>){ std::cout << "Test pass" << std::endl; },[](...){} ) );
 	t.static_variable_type( "cache", misc::make_expansion( [](tag<long>){ std::cout << "Test pass" << std::endl; },[](...){} ) );
-//	tr.member_function_return_type< tag< func >, int >( )(
-//				misc::make_expansion( [](tag<double>){ std::cout << "Test pass" << std::endl; },[](...){} ) );
-//	tr.static_function_return_type< tag< function > >( )(
-//				misc::make_expansion( [](tag<int>){ std::cout << "Test pass" << std::endl; },[](...){} ) );
+	tr.member_function_return_type< tag< func >, int >( )(
+				misc::make_expansion( [](tag<double>){ std::cout << "Test pass" << std::endl; },[](...){throw;} ) );
+	tr.static_function_return_type< tag< function > >( )(
+				misc::make_expansion( [](tag<int>){ std::cout << "Test pass" << std::endl; },[](...){throw;} ) );
 	t.member_function_return_type< int >( "func" )(
 				misc::make_expansion( [](tag<double>){ std::cout << "Test pass" << std::endl; },[](...){} ) );
 	t.static_function_return_type( "function" )(

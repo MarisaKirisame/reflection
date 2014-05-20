@@ -267,7 +267,7 @@ struct NAME : reflection_base< NAME > \
 	{ \
 		const CPS & k; \
 		template< typename T > \
-		void operator ( )( const tag< T > & ) const\
+		void operator ( )( const tag< T > & ) const \
 		{	k( tag< typename ::member_variable_type< T, TAG >::type >( ) ); } \
 		member_variable_type_helper( const CPS & k ) : k( k ) { } \
 	}; \
@@ -286,51 +286,29 @@ struct NAME : reflection_base< NAME > \
 	template< typename TAG, typename K > \
 	void static_variable_type( const K & k ) const \
 	{ string_to_tag( any_typename, static_variable_type_helper< TAG, K >( k ) ); } \
-	template< typename TAG, typename ... ARG > \
-	struct member_function_return_type_delegate \
-	{ \
-		NAME * that; \
-		template< typename T > \
-		void operator( )( const T & t ) { that->member_function_return_type_inner< TAG, T, ARG ... >( t ); } \
-		member_function_return_type_delegate( NAME * that ) : that( that ) { } \
-	}; \
 	template< typename TAG,  typename CPS, typename ... ARG > \
 	struct static_function_return_type_helper \
 	{ \
 		const CPS & k; \
 		template< typename T > \
-		void operator ( )( const tag< T > & ) const\
+		void operator ( )( const tag< T > & ) const \
 		{	k( ::tag< typename ::static_function_return_type< T, TAG, ARG ... >::type >( ) ); } \
 		static_function_return_type_helper( const CPS & k ) : k( k ) { } \
 	}; \
 	template< typename TAG, typename K, typename ... ARG > \
 	void static_function_return_type_inner( const K & k ) const \
 	{ string_to_tag( any_typename, static_function_return_type_helper< TAG, K, ARG ... >( k ) ); } \
-	template< typename TAG, typename ... ARG > \
-	struct static_function_return_type_delegate \
-	{ \
-		NAME * that;\
-		template< typename T > \
-		void operator( )( const T & t ) { that->static_function_return_type_inner< TAG, T, ARG ... >( t ); } \
-		static_function_return_type_delegate( NAME * that ) : that( that ) { } \
-	}; \
-	template< typename TAG, typename ... ARG > \
-	static_function_return_type_delegate< TAG, ARG ... > static_function_return_type( ) const \
-	{ return static_function_return_type_delegate< TAG, ARG ... >( this ); } \
 	template< typename TAG,  typename CPS, typename ... ARG > \
 	struct member_function_return_type_helper \
 	{ \
 		const CPS & k; \
 		template< typename T > \
-		void operator ( )( const tag< T > & ) const\
+		void operator ( )( const tag< T > & ) const \
 		{	k( ::tag< typename ::member_function_return_type< T, TAG, ARG ... >::type >( ) ); } \
 		member_function_return_type_helper( const CPS & k ) : k( k ) { } \
 	}; \
 	template< typename TAG, typename K, typename ... ARG > \
 	void member_function_return_type_inner( const K & k ) const \
 	{ string_to_tag( any_typename, member_function_return_type_helper< TAG, K, ARG ... >( k ) ); } \
-	template< typename TAG, typename ... ARG > \
-	member_function_return_type_delegate< TAG, ARG ... > member_function_return_type( ) const \
-	{ return member_function_return_type_delegate< TAG, ARG ... >( this ); } \
 };
 #endif // ANY_HPP
