@@ -75,7 +75,8 @@ struct NAME : reflection_base< NAME > \
 	}; \
 	any_internal * any_data; \
 	std::function< any_internal * ( any_internal * ) > copy_data; \
-	NAME( const NAME & n ) : any_typename( n.any_typename ), any_data( n.copy_data( n.any_data ) ), copy_data( n.copy_data ) { }\
+	NAME( const NAME & n ) : any_typename( n.any_typename ), any_data( n.copy_data( n.any_data ) ), copy_data( n.copy_data ) { } \
+	NAME( NAME && n ) : any_typename( std::move( n.any_typename ) ), any_data( n.copy_data( n.any_data ) ), copy_data( std::move( n.copy_data ) ) { } \
 	NAME & operator =( const NAME & n ) \
 	{ \
 		any_typename = n.any_typename; \
@@ -334,12 +335,15 @@ struct NAME : reflection_base< NAME > \
 	struct type_restore_helper \
 	{ \
 		const K & k; \
-		NAME * that; \
-		type_restore_helper( NAME * that, const K & k ) : k( k ), that( that ) { } \
+		const NAME * that; \
+		type_restore_helper( const NAME * that, const K & k ) : k( k ), that( that ) { } \
 		template< typename TAG > \
-		void operator ( )( const tag< TAG > & ) { k( * static_cast< TAG * >( that->any_data->data ) ); } \
+		typename std::enable_if< has_class< TAG >::value >::type \
+		operator ( )( const tag< TAG > & ) const { k( * static_cast< const TAG * >( that->any_data->data ) ); } \
+		template< typename ... > \
+		void operator ( )( ... ) const { k( no_existence( ) ); } \
 	}; \
 	template< typename K > \
-	void type_restore( const K & k ) { string_to_tag( any_typename, type_restore_helper< K >( this, k ) ); } \
+	void type_restore( const K & k ) const { string_to_tag( any_typename, type_restore_helper< K >( this, k ) ); } \
 };
 #endif // ANY_HPP

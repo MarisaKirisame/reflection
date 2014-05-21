@@ -97,5 +97,6 @@ void example( )
 	ob.add_member_variable( "mem", tr );
 	assert( ob.has_member_variable( "mem" ) );
 	assert( ! ob.has_member_variable( "noexist" ) );
+	ob.member_variable_type( "mem", misc::make_expansion( []( const tag< test > & ){ }, [](...){ throw; } ) );
 }
 #endif //EXAMPLE_HPP

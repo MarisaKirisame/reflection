@@ -4,9 +4,11 @@
 #include <map>
 #include <string>
 #include "member_variable.hpp"
+#include "string_to_tag.hpp"
 template< typename ANY, typename CRTP >
 struct object_base : reflection_base< object_base< ANY, CRTP > >
 {
+	using reflection_base< object_base< ANY, CRTP > >::member_variable_type;
 	std::map< std::string, ANY > member_variable;
 	static std::map< std::string, ANY > & static_variable( )
 	{
@@ -101,15 +103,102 @@ struct object_base : reflection_base< object_base< ANY, CRTP > >
 	static bool add_static_variable( const std::string & str, const ANY & any )
 	{ return static_variable( ).insert( std::make_pair( str, any ) ).second; }
 	virtual ~object_base( ) { }
+	template< typename K >
+	struct make_tag
+	{
+		const K & k;
+		template< typename T >
+		void operator( )( const T & ) const { k( tag< typename std::remove_reference< T >::type >( ) ); }
+		make_tag( const K & k ) : k( k ) { }
+	};
 	template< typename TAG, typename K >
 	void member_variable_type( const K & k ) const
 	{
-
+		if ( ::has_member_variable< CRTP, TAG >::value )
+		{ k( tag< typename ::member_variable_type< CRTP, TAG >::type >( ) ); }
+		else
+		{
+			auto i = member_variable.find( TAG::name( ) );
+			if ( i == member_variable.end( ) )
+			{ k( tag< no_existence >( ) ); }
+			else { i->second.type_restore( make_tag< K >( k ) ); }
+		}
 	}
 	template< typename TAG, typename K >
 	void static_variable_type( const K & k ) const
 	{
-
+		if ( ::has_static_variable< CRTP, TAG >::value )
+		{ k( tag< typename ::static_variable_type< CRTP, TAG >::type >( ) ); }
+		else
+		{
+			auto i = static_variable( ).find( TAG::name( ) );
+			if ( i == static_variable( ).end( ) )
+			{ k( tag< no_existence >( ) ); }
+			else { i->second.type_restore( make_tag< K >( k ) ); }
+		}
+	}
+	template< typename K >
+	struct member_variable_type_helper
+	{
+		const K & k;
+		const CRTP * that;
+		member_variable_type_helper( const CRTP * that, const K & k ) : k( k ), that( that ) { }
+		template< typename TAG >
+		void operator ( )( const TAG & ) const
+		{
+			if ( ::has_member_variable< CRTP, TAG >::value ) { k( tag< typename ::member_variable_type< CRTP, TAG >::type >( ) ); }
+			else
+			{
+				auto i = that->member_variable.find( TAG::name( ) );
+				if ( i == that->member_variable.end( ) )
+				{ k( tag< no_existence >( ) ); }
+				else { i->second.type_restore( make_tag< K >( k ) ); }
+			}
+		}
+	};
+	template< typename K >
+	struct static_variable_type_helper
+	{
+		const K & k;
+		const CRTP * that;
+		static_variable_type_helper( const CRTP * that, const K & k ) : k( k ), that( that ) { }
+		template< typename TAG >
+		void operator ( )( const TAG & ) const
+		{
+			if ( ::has_static_variable< CRTP, TAG >::value ) { k( tag< decltype( ::static_variable_type< CRTP, TAG >( )( ) ) >( ) ); }
+			else
+			{
+				auto i = static_variable( ).find( TAG::name( ) );
+				if ( i == static_variable( ).end( ) )
+				{ k( tag< no_existence >( ) ); }
+				else { i->second.type_restore( make_tag< K >( k ) ); }
+			}
+		}
+	};
+	template< typename K >
+	void member_variable_type( const std::string & str, const K & k ) const
+	{
+		try { string_to_tag( str, member_variable_type_helper< K >( static_cast< const CRTP * >( this ), k ) ); }
+		catch ( const unable_to_determine_type & )
+		{
+			auto i = member_variable.find( str );
+			if ( i == member_variable.end( ) )
+			{ k( tag< no_existence >( ) ); }
+			else { i->second.type_restore( make_tag< K >( k ) ); }
+		}
+	}
+	template< typename K >
+	void static_variable_type( const std::string & str, const K & k ) const
+	{
+		try
+		{ string_to_tag( str, member_variable_type_helper< K >( static_cast< const CRTP * >( this ), k ) ); }
+		catch ( const unable_to_determine_type & )
+		{
+			auto i = static_variable( ).find( str );
+			if ( i == static_variable( ).end( ) )
+			{ k( tag< no_existence >( ) ); }
+			else { i->second.type_restore( make_tag< K >( k ) ); }
+		}
 	}
 };
 template< typename ANY >

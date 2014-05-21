@@ -114,7 +114,7 @@ struct member_variable
 	function(
 			typename std::enable_if
 			<
-				has_class< TYPE >::value && \
+				has_class< TYPE >::value &&
 				has_member_variable< TYPE, NAME >::value,
 				TYPE
 			>::type * t )
