@@ -8,11 +8,29 @@
 template< typename ANY, typename CRTP >
 struct object_base : reflection_base< object_base< ANY, CRTP > >
 {
+	struct loop_tag { };
+	struct any_function
+	{
+		ANY function;
+		template< typename ... ARG >
+		void operator ( )( const ARG & ... r ) const
+		{ function.call_member_function( r ... ); }
+	};
 	using reflection_base< object_base< ANY, CRTP > >::member_variable_type;
 	std::map< std::string, ANY > member_variable;
 	static std::map< std::string, ANY > & static_variable( )
 	{
 		static std::map< std::string, ANY > ret;
+		return ret;
+	}
+	static std::map< std::string, any_function > & member_function( )
+	{
+		static std::map< std::string, any_function > ret;
+		return ret;
+	}
+	static std::map< std::string, any_function > & static_function( )
+	{
+		static std::map< std::string, any_function > ret;
 		return ret;
 	}
 	template< typename TAG >
