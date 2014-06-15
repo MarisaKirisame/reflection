@@ -162,7 +162,7 @@ struct NAME : reflection_base< NAME > \
 			static void function( \
 				typename std::enable_if\
 			< \
-				std::is_same< typename member_function_return_type< T, TAG, ARG ... >::type, void >::value && \
+				std::is_same< typename ::member_function_return_type< T, TAG, ARG ... >::type, void >::value && \
 				::has_member_function< T, TAG, ARG ... >::value,\
 				T * \
 			>::type t, \
@@ -175,7 +175,7 @@ struct NAME : reflection_base< NAME > \
 			static void function( \
 				typename std::enable_if \
 				< \
-					( ! std::is_same< typename member_function_return_type< T, TAG, ARG ... >::type , void >::value ) && \
+					( ! std::is_same< typename ::member_function_return_type< T, TAG, ARG ... >::type , void >::value ) && \
 					::has_member_function< T, TAG, ARG ... >::value, \
 					T * \
 			>::type t, \
@@ -217,7 +217,7 @@ struct NAME : reflection_base< NAME > \
 			static void function( \
 				typename std::enable_if\
 			< \
-				std::is_same< typename static_function_return_type< T, TAG, ARG ... >::type, void >::value && \
+				std::is_same< typename ::static_function_return_type< T, TAG, ARG ... >::type, void >::value && \
 				::has_member_function< T, TAG, ARG ... >::value,\
 				const K &  \
 			>::type k, \
@@ -230,7 +230,7 @@ struct NAME : reflection_base< NAME > \
 			static void function( \
 				typename std::enable_if \
 				< \
-					( ! std::is_same< typename static_function_return_type< T, TAG, ARG ... >::type , void >::value ) && \
+					( ! std::is_same< typename ::static_function_return_type< T, TAG, ARG ... >::type , void >::value ) && \
 					::has_static_function< T, TAG, ARG ... >::value, \
 					const K & \
 			>::type k, \

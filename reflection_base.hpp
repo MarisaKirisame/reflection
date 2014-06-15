@@ -70,7 +70,7 @@ struct reflection_base
 		const CRTP * that;
 		template< typename T >
 		void operator ( )( const T & ) const
-		{ store_to = that->has_static_function< T, ARG ... >( ); }
+		{ store_to = that->template has_static_function< T, ARG ... >( ); }
 		has_static_function_string_helper( const CRTP * that, bool & store_to ) : store_to( store_to ), that( that ) { }
 	};
 	template< typename ... ARG >
@@ -110,7 +110,7 @@ struct reflection_base
 		void operator ( )( const TAG & ) const { func< 0, TAG >( ); }
 		template< int i, typename T, typename ... AARG >
 		typename std::enable_if< i == std::tuple_size< decltype( data ) >::value >::type
-		func( const AARG & ... a ) const { that->call_static_function< T, ARG ... >( a ... ); }
+		func( const AARG & ... a ) const { that->template call_static_function< T, ARG ... >( a ... ); }
 		template< int i, typename T, typename ... AARG >
 		typename std::enable_if< i != std::tuple_size< decltype( data ) >::value >::type
 		func( const AARG & ... a ) const { func< i + 1, T >( a ..., * std::get< i >( data ) ); }
@@ -216,7 +216,7 @@ struct reflection_base
 		void operator ( )( const TAG & ) const { func< 0, TAG >( ); }
 		template< int i, typename T, typename ... AARG >
 		typename std::enable_if< i == std::tuple_size< decltype( data ) >::value >::type
-		func( const AARG & ... a ) const { that->call_member_function< T, ARG ... >( a ... ); }
+		func( const AARG & ... a ) const { that->template call_member_function< T, ARG ... >( a ... ); }
 		template< int i, typename T, typename ... AARG >
 		typename std::enable_if< i != std::tuple_size< decltype( data ) >::value >::type
 		func( const AARG & ... a ) const { func< i + 1, T >( a ..., * std::get< i >( data ) ); }
@@ -246,7 +246,7 @@ struct reflection_base
 	typename
 	std::enable_if
 	<
-		( ! std::is_same< typename member_function_return_type< CRTP, TAG, ARG ... >::type , void >::value ) &&
+		( ! std::is_same< typename ::member_function_return_type< CRTP, TAG, ARG ... >::type , void >::value ) &&
 		::has_member_function< CRTP, TAG, ARG ... >::value
 	>::type call_member_function_inner( const K & k, const ARG & ... arg )
 	{ k( ::call_member_function< CRTP, TAG, ARG ... >( )( * static_cast< CRTP * >( this ), arg ... ) ); }
@@ -254,7 +254,7 @@ struct reflection_base
 	typename
 	std::enable_if
 	<
-		( std::is_same< typename member_function_return_type< CRTP, TAG, ARG ... >::type , void >::value ) &&
+		( std::is_same< typename ::member_function_return_type< CRTP, TAG, ARG ... >::type , void >::value ) &&
 		::has_member_function< CRTP, TAG, ARG ... >::value
 	>::type call_member_function_inner( const K & k, const ARG & ... arg )
 	{
@@ -272,7 +272,7 @@ struct reflection_base
 	template< typename TAG, typename K, typename ... ARG >
 	typename std::enable_if
 	<
-		std::is_same< typename static_function_return_type< CRTP, TAG, ARG ... >::type, void >::value &&
+		std::is_same< typename ::static_function_return_type< CRTP, TAG, ARG ... >::type, void >::value &&
 		::has_static_function< CRTP, TAG, ARG ... >::value
 	>::type call_static_function_inner( const K & k, const ARG & ... arg ) const
 	{
@@ -282,7 +282,7 @@ struct reflection_base
 	template< typename TAG, typename K, typename ... ARG >
 	typename std::enable_if
 	<
-		( ! std::is_same< typename static_function_return_type< CRTP, TAG, ARG ... >::type, void >::value ) &&
+		( ! std::is_same< typename ::static_function_return_type< CRTP, TAG, ARG ... >::type, void >::value ) &&
 		::has_static_function< CRTP, TAG, ARG ... >::value
 	>::type call_static_function_inner( const K & k, const ARG & ... arg ) const
 	{ k( ::call_static_function< CRTP, TAG, ARG ... >( )( arg ... ) ); }
