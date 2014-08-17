@@ -1,5 +1,6 @@
 #ifndef EXAMPLE_HPP
 #define EXAMPLE_HPP
+#include <vector>
 #include <memory>
 #include "declare.hpp"
 #include "any.hpp"
@@ -50,11 +51,6 @@ static_assert( has_member_variable< test, tag< data > >::value, "" );
 static_assert( ! has_member_variable< test, tag< cache > >::value, "" );
 static_assert( std::is_same< member_variable_type< test, tag< data > >::type, int >::value, "" );
 #include <iostream>
-template< typename T, typename K >
-void invoke_all_member_variable( T & t, const K & k )
-{
-	helper< T >::template invoke_all_member_variable< T, K >( & t, k );
-}
 void example( )
 {
 	test t;

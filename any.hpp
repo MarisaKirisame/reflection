@@ -13,7 +13,7 @@
 #define DECLARE_ANY( NAME, NAME_SEQ ) \
 struct NAME : reflection_base< NAME > \
 {	\
-	using reflection_base::has_member_variable;	\
+	using reflection_base::has_member_variable; \
 	using reflection_base::has_static_variable; \
 	using reflection_base::has_static_function; \
 	using reflection_base::has_member_function; \

@@ -124,6 +124,12 @@ struct member_variable
 	decltype( function< TTYPE, NNAME >( std::declval< TTYPE * >( ) ) ) operator ( )( TTYPE * t )
 	{ return function< TTYPE, NNAME >( t ); }
 };
+
+template< typename T, typename K >
+void invoke_all_member_variable( T & t, const K & k )
+{
+	helper< T >::template invoke_all_member_variable< T, K >( & t, k );
+}
 #define DECLARE_ALL_POSSIBLE_MEMBER_VARIABLE_HELPER( R, DATA, ELEMENT ) DECLARE_POSSIBLE_MEMBER_VARIABLE( ELEMENT, DATA )
 #define DECLARE_ALL_POSSIBLE_MEMBER_VARIABLE( NAME_SEQ ) BOOST_PP_SEQ_FOR_EACH( DECLARE_ALL_POSSIBLE_MEMBER_VARIABLE_HELPER, NAME_SEQ, NAME_SEQ )
 #endif //MEMBER_VARIABLE_HPP
