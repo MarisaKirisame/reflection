@@ -68,7 +68,7 @@ struct NAME : reflection_base< NAME > \
     }; \
     template< typename T > \
     struct any_internal_implement : any_internal \
-    {	\
+    { \
         any_internal_implement( const T & t ) : any_internal( new T( t ) ) { } \
         any_internal_implement( T && t ) : any_internal( new T( std::move< T >( t ) ) ) { } \
         ~any_internal_implement( ) \
@@ -337,7 +337,7 @@ struct NAME : reflection_base< NAME > \
         const CPS & k; \
         template< typename T > \
         void operator ( )( const tag< T > & ) const \
-        {	k( tag< typename ::static_variable_type< T, TAG >::type >( ) ); } \
+        { k( tag< typename ::static_variable_type< T, TAG >::type >( ) ); } \
         static_variable_type_helper( const CPS & k ) : k( k ) { } \
     }; \
     template< typename TAG, typename K > \

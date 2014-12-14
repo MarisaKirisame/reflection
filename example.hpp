@@ -16,7 +16,8 @@ struct test : reflection_base< test >
     double func( int, int ) { return 10; }
     static int function( ) { return 1; }
     static long cache;
-    static decltype( & function ) bar( long, long time ) { if ( time == 0 ) { } return & function; }
+    static decltype( & function ) bar( long, long )
+    { return & function; }
 };
 DECLARE_ALL( EXAMPLE_NAME_SEQ )
 long test::cache = 1230;
@@ -52,10 +53,11 @@ static_assert(
 static_assert( has_class< test >::value, "" );
 static_assert( has_member_variable< test, tag< data > >::value, "" );
 static_assert( ! has_member_variable< test, tag< cache > >::value, "" );
-static_assert( std::is_same< member_variable_type< test, tag< data > >::type, int >::value, "" );
+static_assert( std::is_same< member_variable_type< test, tag< data > >::type, int >::value );
 #include <iostream>
 void example( )
 {
+    assert( (static_variable< test, tag< cache > >( )( ) == 1230) );
     test t;
     invoke_all_member_variable(
         t,

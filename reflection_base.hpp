@@ -15,7 +15,7 @@ struct reflection_base
         const CPS & k;
         template< typename T >
         void operator ( )( const tag< T > & ) const
-        {	k( tag< typename ::static_variable_type< T, TAG >::type >( ) ); }
+        { k( tag< typename ::static_variable_type< T, TAG >::type >( ) ); }
         static_variable_type_helper( const CPS & k ) : k( k ) { }
     };
     template< typename TAG, typename K >
