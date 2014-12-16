@@ -66,14 +66,17 @@ BOOST_AUTO_TEST_CASE( compiletime_reflection_test )
 }
 BOOST_AUTO_TEST_CASE( runtime_reflection_test )
 {
-    auto ii = misc::make_expansion(
+    using misc::make_expansion;
+    auto f = [](...){ BOOST_CHECK( false ); };
+    auto ii = make_expansion(
         [](int i){ std::cout << i << std::endl; },
         [](...){ std::cout << "Hello World" << std::endl; } );
     test t;
     invoke_all_member_variable(
         t,
         misc::make_expansion( []( tag< data >, int i ){ std::cout << i << std::endl; }, [](...){} ) );
-    t.get_member_variable( "data", ii );
+    t.get_member_variable( "data",
+                            make_expansion( []( int i ){ BOOST_CHECK_EQUAL( i, 12450 ); }, f ) );
     t.get_static_variable( "cache", ii );
     assert( t.has_member_variable( "data" ) );
     assert( ! t.has_member_variable( "cache" ) );

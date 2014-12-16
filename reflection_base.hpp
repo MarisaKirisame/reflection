@@ -164,7 +164,7 @@ struct reflection_base
         void operator ( )( const T & ) const { that->template get_member_variable< T, CPS >( k ); }
     };
     template< typename CPS >
-    void get_member_variable( const std::string & tag, CPS & k )
+    void get_member_variable( const std::string & tag, const CPS & k )
     { string_to_tag( tag, get_member_variable_string_helper< CPS >( static_cast< CRTP * >( this ), k ) ); }
     template< typename CPS >
     struct static_variable_type_string_helper
