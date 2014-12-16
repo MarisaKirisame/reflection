@@ -1,5 +1,1 @@
-#include<example.hpp>
-int main( )
-{
-    example( );
-}
+#include<test.hpp>
