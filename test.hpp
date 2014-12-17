@@ -77,60 +77,62 @@ BOOST_AUTO_TEST_CASE( runtime_reflection_test )
         misc::make_expansion( []( tag< data >, int i ){ std::cout << i << std::endl; }, [](...){} ) );
     t.get_member_variable( "data",
                             make_expansion( []( int i ){ BOOST_CHECK_EQUAL( i, 12450 ); }, f ) );
-    t.get_static_variable( "cache", ii );
-    assert( t.has_member_variable( "data" ) );
-    assert( ! t.has_member_variable( "cache" ) );
-    assert( t.has_static_variable( "cache" ) );
+    t.get_static_variable( "cache", make_expansion( []( int i ){ BOOST_CHECK_EQUAL( i, 1230 ); }, f ) );
+    BOOST_CHECK( t.has_member_variable( "data" ) );
+    BOOST_CHECK( ! t.has_member_variable( "cache" ) );
+    BOOST_CHECK( t.has_static_variable( "cache" ) );
     t.call_member_function( "func", 1, ii );
     t.call_static_function( "function", ii );
     t.call_member_function( "function", ii );
-    assert( ! t.has_static_function< int >( "func" ) );
-    assert( t.has_member_function< int >( "func" ) );
+    BOOST_CHECK( ! t.has_static_function< int >( "func" ) );
+    BOOST_CHECK( t.has_member_function< int >( "func" ) );
     t.member_variable_type(
         "data",
-        misc::make_expansion( [](tag<int>){ std::cout << "Test pass" << std::endl; },[](...){} ) );
+        misc::make_expansion( [](tag<int>){ }, f ) );
     t.static_variable_type(
         "cache",
-        misc::make_expansion( [](tag<long>){ std::cout << "Test pass" << std::endl; },[](...){} ) );
+        misc::make_expansion( [](tag<long>){ }, f ) );
     t.member_function_return_type< int >( "func" )(
-        misc::make_expansion( [](tag<double>){ std::cout << "Test pass" << std::endl; },[](...){} ) );
+        misc::make_expansion( [](tag<double>){ }, f ) );
     t.static_function_return_type( "function" )(
-        misc::make_expansion( [](tag<int>){ std::cout << "Test pass" << std::endl; },[](...){} ) );
+        misc::make_expansion( [](tag<int>){ }, f ) );
 }
 BOOST_AUTO_TEST_CASE( any_reflection_test )
 {
+    auto f = [](...){ BOOST_CHECK( false ); };
     any_test tr( []( ){ test t; return t; }( ) );
     auto ii = misc::make_expansion(
         [](int i){ std::cout << i << std::endl; },
         [](...){ std::cout << "Hello World" << std::endl; } );
     tr.member_variable_type(
         "data",
-        misc::make_expansion( [](tag<int>){ std::cout << "Test pass" << std::endl; },[](...){} ) );
+        misc::make_expansion( [](tag<int>){ }, f ) );
     tr.get_member_variable( "data", ii );
     tr.get_static_variable( "cache", ii );
-    assert( tr.has_member_variable( "data" ) );
-    assert( ! tr.has_member_variable( "cache" ) );
-    assert( tr.has_static_variable( "cache" ) );
+    BOOST_CHECK( tr.has_member_variable( "data" ) );
+    BOOST_CHECK( ! tr.has_member_variable( "cache" ) );
+    BOOST_CHECK( tr.has_static_variable( "cache" ) );
     tr.call_member_function( "func", 1, ii );
     tr.call_static_function( "function", ii );
     tr.call_member_function( "function", ii );
-    assert( ! tr.has_static_function< int >( "func" ) );
-    assert( tr.has_member_function< int >( "func" ) );
+    BOOST_CHECK( ! tr.has_static_function< int >( "func" ) );
+    BOOST_CHECK( tr.has_member_function< int >( "func" ) );
     tr.static_variable_type(
         "cache",
-        misc::make_expansion( [](tag<long>){ std::cout << "Test pass" << std::endl; },[](...){} ) );
+        misc::make_expansion( [](tag<long>){ }, f ) );
     tr.member_function_return_type< tag< func >, int >( )(
-        misc::make_expansion( [](tag<double>){ std::cout << "Test pass" << std::endl; },[](...){throw;} ) );
+        misc::make_expansion( [](tag<double>){ }, f ) );
     tr.static_function_return_type< tag< function > >( )(
-        misc::make_expansion( [](tag<int>){ std::cout << "Test pass" << std::endl; },[](...){throw;} ) );
+        misc::make_expansion( [](tag<int>){ }, f ) );
 }
 BOOST_AUTO_TEST_CASE( object_reflection_test )
 {
+    auto f = [](...){ BOOST_CHECK( false ); };
     object< any_test > ob;
     any_test tr( []( ){ test t; return t; }( ) );
     ob.add_member_variable( "mem", tr );
-    assert( ob.has_member_variable( "mem" ) );
-    assert( ! ob.has_member_variable( "noexist" ) );
-    ob.member_variable_type( "mem", misc::make_expansion( []( const tag< test > & ){ }, [](...){ throw; } ) );
+    BOOST_CHECK( ob.has_member_variable( "mem" ) );
+    BOOST_CHECK( ! ob.has_member_variable( "noexist" ) );
+    ob.member_variable_type( "mem", misc::make_expansion( []( const tag< test > & ){ }, f ) );
 }
 #endif //EXAMPLE_HPP
