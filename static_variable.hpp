@@ -13,8 +13,8 @@
         < \
             TAG, \
             ::tag< ::NAME > \
-        >::value, \
-        decltype( std::addressof( SELF::NAME ) ) \
+        >::value && \
+        ! std::is_member_object_pointer< decltype( & SELF::NAME ) >::value \
     >::type * ) \
     { return true; } \
     template< typename SELF, typename TAG > \

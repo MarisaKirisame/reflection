@@ -24,6 +24,7 @@ struct test : reflection_base< test >
     struct bad { auto operator & ( ) const { return & test::data; } };
     static bad evil;
 };
+
 DECLARE_ALL( EXAMPLE_NAME_SEQ )
 test::bad test::evil = test::bad( );
 long test::cache = 1230;
@@ -60,7 +61,6 @@ static_assert( has_class< test >::value );
 static_assert( has_member_variable< test, tag< data > >::value );
 static_assert( ! has_member_variable< test, tag< cache > >::value );
 static_assert( std::is_same< member_variable_type< test, tag< data > >::type, int >::value );
-common::PrintType< static_variable_type< test, tag< evil > >::type > s;
 static_assert( std::is_same< static_variable_type< test, tag< evil > >::type, test::bad >::value );
 #include <iostream>
 BOOST_AUTO_TEST_CASE( compiletime_reflection_test )
