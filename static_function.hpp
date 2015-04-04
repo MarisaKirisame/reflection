@@ -29,36 +29,6 @@
         decltype( SELF::NAME( std::declval< R >( ) ... ) ) \
     >::type \
     static call_static_function( const R & ...  r ) { return SELF::NAME( r ... ); }
-template< typename TTTYPE, typename NNNAME, typename ... AAARG >
-struct static_function_return_type
-{
-    template< typename TTYPE, typename NNAME, typename ... AARG >
-    struct inner
-    {
-        template< typename TYPE, typename NAME, typename ... ARG >
-        static decltype(
-                helper< TYPE >::template call_static_function< TYPE, NAME >(
-                    std::declval< ARG >( ) ... ) ) function( void * );
-        template< typename ... >
-        static no_existence function( ... );
-    };
-    template< typename TTYPE, typename NNAME >
-    struct inner< TTYPE, NNAME, void >
-    {
-        template< typename TYPE, typename NAME, typename ... >
-        static decltype(
-                helper< TYPE >::template call_static_function< TYPE, NAME >( ) ) function( void * );
-        template< typename ... >
-        static no_existence function( ... );
-    };
-    typedef decltype(
-            inner
-            <
-                TTTYPE,
-                NNNAME,
-                AAARG ...
-            >::template function< TTTYPE, NNNAME, AAARG ... >( nullptr ) ) type;
-};
 template< typename TYPE, typename TAG, typename ... AARG >
 struct has_static_function
 {
@@ -87,6 +57,41 @@ struct has_static_function
     };
     constexpr static bool value =
             inner< TYPE, TAG, AARG ... >::template function< TYPE, TAG, AARG ... >( nullptr );
+};
+template< typename TTTYPE, typename NNNAME, typename ... AAARG >
+struct static_function_return_type
+{
+    template< typename TTYPE, typename NNAME, typename ... AARG >
+    struct inner
+    {
+        template< typename TYPE, typename NAME, typename ... ARG >
+        static
+        std::enable_if_t
+        <
+            has_static_function< TYPE, NAME, ARG ... >::value,
+            decltype(
+                helper< TYPE >::template call_static_function< TYPE, NAME >(
+                    std::declval< ARG >( ) ... ) )
+        >function( void * );
+        template< typename ... >
+        static no_existence function( ... );
+    };
+    template< typename TTYPE, typename NNAME >
+    struct inner< TTYPE, NNAME, void >
+    {
+        template< typename TYPE, typename NAME, typename ... >
+        static decltype(
+                helper< TYPE >::template call_static_function< TYPE, NAME >( ) ) function( void * );
+        template< typename ... >
+        static no_existence function( ... );
+    };
+    typedef decltype(
+            inner
+            <
+                TTTYPE,
+                NNNAME,
+                AAARG ...
+            >::template function< TTTYPE, NNNAME, AAARG ... >( nullptr ) ) type;
 };
 template< typename TYPE, typename NAME, typename ... ARG >
 struct call_static_function

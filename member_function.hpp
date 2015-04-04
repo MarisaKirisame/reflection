@@ -7,6 +7,7 @@
 #include <boost/preprocessor/cat.hpp>
 #include <boost/preprocessor/tuple/to_seq.hpp>
 #include <has_class.hpp>
+#include <boost/tti/has_member_data.hpp>
 #define DECLARE_POSSIBLE_MEMBER_FUNCTION( NAME ) \
     template< typename SELF, typename TAG, typename ... ARG > \
     constexpr static bool has_member_function( \
@@ -89,10 +90,15 @@ struct member_function_return_type
     struct member_function_return_type_inner
     {
         template< typename TTYPE, typename TTAG, typename ... AARG >
-        static decltype(
-                    helper< TTYPE >::template call_member_function< TTYPE, TTAG >(
-                        std::declval< TTYPE >( ),
-                        std::declval< AARG >( ) ... ) ) function( void * );
+        static
+        std::enable_if_t
+        <
+            has_member_function< TTYPE, TTAG, AARG ... >::value,
+            decltype(
+                helper< TTYPE >::template call_member_function< TTYPE, TTAG >(
+                    std::declval< TTYPE >( ),
+                    std::declval< AARG >( ) ... ) )
+        >function( void * );
         template< typename ... >
         static no_existence function( ... );
     };
@@ -100,9 +106,13 @@ struct member_function_return_type
     struct member_function_return_type_inner< T1, T2, void >
     {
         template< typename TTYPE, typename TTAG >
-        static decltype(
+        static std::enable_if_t
+        <
+            has_member_function< TTYPE, TTAG >::value,
+            decltype(
                 helper< TTYPE >::template call_member_function< TYPE, TTAG >(
-                    std::declval< TTYPE >( ) ) ) function( );
+                    std::declval< TTYPE >( ) ) )
+        > function( );
         template< typename ... >
         static no_existence function( ... );
     };

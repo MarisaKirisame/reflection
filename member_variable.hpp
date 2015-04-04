@@ -102,7 +102,12 @@ template< typename TYPE, typename TAG >
 struct member_variable_type
 {
     template< typename TTYPE, typename TTAG >
-    static decltype( helper< TTYPE >::template member_variable_type< TTYPE, TTAG >( ) ) function( void * );
+    static
+    std::enable_if_t
+    <
+        has_member_variable< TTYPE, TTAG >::value,
+        decltype( helper< TTYPE >::template member_variable_type< TTYPE, TTAG >( ) )
+    > function( void * );
     template< typename ... >
     static no_existence function( ... );
     typedef decltype( function< TYPE, TAG >( nullptr ) ) type;

@@ -3,6 +3,7 @@
 #include <boost/preprocessor.hpp>
 #include "reflection.hpp"
 #include "has_class.hpp"
+#include <utility>
 #define DECLARE_POSSIBLE_STATIC_VARIABLE( NAME ) \
     template< typename SELF, typename TAG > \
     constexpr static bool has_static_variable( \
@@ -12,8 +13,8 @@
         < \
             TAG, \
             ::tag< ::NAME > \
-        >::value && \
-        ! std::is_member_object_pointer< decltype( & SELF::NAME ) >::value \
+        >::value, \
+        decltype( std::addressof( SELF::NAME ) ) \
     >::type * ) \
     { return true; } \
     template< typename SELF, typename TAG > \
@@ -79,7 +80,12 @@ template< typename TYPE, typename TAG >
 struct static_variable_type
 {
     template< typename TTYPE, typename TTAG >
-    static decltype( helper< TTYPE >::template static_variable_type< TTYPE, TTAG >( ) ) function( void * );
+    static
+    std::enable_if_t
+    <
+        has_static_variable< TTYPE, TTAG >::value,
+        decltype( helper< TTYPE >::template static_variable_type< TTYPE, TTAG >( ) )
+    > function( void * );
     template< typename ... >
     static no_existence function( ... );
     typedef decltype( function< TYPE, TAG >( nullptr ) ) type;
